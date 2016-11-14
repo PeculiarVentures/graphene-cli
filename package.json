@@ -1,0 +1,31 @@
+{
+  "name": "graphene-cli",
+  "version": "1.0.0",
+  "description": "graphene-pk11 CLI",
+  "bin": {
+    "graphene": "build/index.js"
+  },
+  "main": "build/index.js",
+  "dependencies": {
+    "@types/node": "^6.0.46",
+    "graphene-pk11": "^2.0.17"
+  },
+  "devDependencies": {
+    "typescript": "^2.0.6"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "pub": "npm run build && npm version patch && npm publish && git push"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PeculiarVentures/graphene-cli.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PeculiarVentures/graphene-cli/issues"
+  },
+  "homepage": "https://github.com/PeculiarVentures/graphene-cli#readme"
+}
