@@ -1,4 +1,5 @@
 # graphene-cli
+Graphene is a cross platform command line tool for working with PKCS#11 devices. 
 
 ## Install
 
