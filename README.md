@@ -2,6 +2,8 @@
 [![license](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://raw.githubusercontent.com/PeculiarVentures/graphene-cli/master/LICENSE)
 [![NPM version](https://badge.fury.io/js/graphene-cli.svg)](http://badge.fury.io/graphene-cli)
 
+[![NPM](https://nodei.co/npm-dl/graphene-cli.png?months=2&height=2)](https://nodei.co/npm/graphene-cli/)
+
 Graphene is a cross platform command line tool for working with PKCS#11 devices. 
 
 ## Install
