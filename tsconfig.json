@@ -4,6 +4,7 @@
         "outDir": "build",
         "moduleResolution": "node",
         "target": "es5",
+        "newLine": "LF",
         "noImplicitAny": true,
         "strictNullChecks": true,
         "noUnusedLocals": false,

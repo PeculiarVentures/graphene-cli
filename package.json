@@ -1,6 +1,6 @@
 {
   "name": "graphene-cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "graphene-pk11 CLI",
   "bin": {
     "graphene": "build/index.js"
@@ -16,7 +16,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "pub": "npm run build && npm version patch && npm publish && git push"
+    "prepub": "npm run build",
+    "pub": "npm version patch && npm publish && git push"
   },
   "repository": {
     "type": "git",
