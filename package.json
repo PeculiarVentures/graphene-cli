@@ -24,7 +24,7 @@
     "url": "git+https://github.com/PeculiarVentures/graphene-cli.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/PeculiarVentures/graphene-cli/issues"
   },

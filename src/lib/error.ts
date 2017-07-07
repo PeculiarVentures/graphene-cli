@@ -3,7 +3,8 @@ export interface ICommand {
 }
 
 export class CommandError extends Error {
-    command: ICommand;
+
+    public command: ICommand;
 
     constructor(command: ICommand, message: string) {
         super();

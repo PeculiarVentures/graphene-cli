@@ -1,4 +1,4 @@
-import { Storage, ObjectClass, PrivateKey, PublicKey, SecretKey, KeyGenMechanism, KeyType } from "graphene-pk11";
+import { KeyGenMechanism, KeyType, ObjectClass, PrivateKey, PublicKey, SecretKey, Storage } from "graphene-pk11";
 import * as defs from "./defs";
 const {consoleApp, Handle} = defs;
 
@@ -9,16 +9,16 @@ declare let global: any;
    ==========*/
 export let cmdObject = defs.commander.createCommand("object", {
     description: "manage objects on the device",
-    note: defs.NOTE_SESSION
+    note: defs.NOTE_SESSION,
 })
     .on("call", () => {
         cmdObject.help();
     }) as defs.Command;
 
 function print_object_info(obj: Storage) {
-    let TEMPLATE = "| %s | %s |";
-    let COL_1 = 20;
-    let COL_2 = 25;
+    const TEMPLATE = "| %s | %s |";
+    const COL_1 = 20;
+    const COL_2 = 25;
     console.log(TEMPLATE, defs.rpud("Name", COL_1), defs.rpud("Value", COL_2));
     console.log(TEMPLATE.replace(/\s/g, "-"), defs.rpud("", COL_1, "-"), defs.rpud("", COL_2, "-"));
     console.log(TEMPLATE, defs.rpud("Handle", COL_1), defs.rpud(Handle.toString(obj.handle), COL_2));
@@ -29,7 +29,7 @@ function print_object_info(obj: Storage) {
     console.log(TEMPLATE, defs.rpud("Modifiable", COL_1), defs.rpud(obj.modifiable, COL_2));
 
     if (obj.class === ObjectClass.PRIVATE_KEY) {
-        let o: PrivateKey = obj.toType<PrivateKey>();
+        const o: PrivateKey = obj.toType<PrivateKey>();
         console.log(TEMPLATE, defs.rpud("ID", COL_1), defs.rpud(o.id.toString("hex"), COL_2));
         console.log(TEMPLATE, defs.rpud("Mechanism", COL_1), defs.rpud(KeyGenMechanism[o.mechanism], COL_2));
         console.log(TEMPLATE, defs.rpud("Local", COL_1), defs.rpud(o.local, COL_2));
@@ -41,7 +41,7 @@ function print_object_info(obj: Storage) {
         console.log(TEMPLATE, defs.rpud("Sign recover", COL_1), defs.rpud(o.signRecover, COL_2));
         console.log(TEMPLATE, defs.rpud("Unwrap", COL_1), defs.rpud(o.unwrap, COL_2));
     } else if (obj.class === ObjectClass.PUBLIC_KEY) {
-        let o: PublicKey = obj.toType<PublicKey>();
+        const o: PublicKey = obj.toType<PublicKey>();
         console.log(TEMPLATE, defs.rpud("ID", COL_1), defs.rpud(o.id.toString("hex"), COL_2));
         console.log(TEMPLATE, defs.rpud("Mechanism", COL_1), defs.rpud(KeyGenMechanism[o.mechanism], COL_2));
         console.log(TEMPLATE, defs.rpud("Local", COL_1), defs.rpud(o.local, COL_2));
@@ -50,7 +50,7 @@ function print_object_info(obj: Storage) {
         console.log(TEMPLATE, defs.rpud("Verify", COL_1), defs.rpud(o.verify, COL_2));
         console.log(TEMPLATE, defs.rpud("Wrap", COL_1), defs.rpud(o.wrap, COL_2));
     } else if (obj.class === ObjectClass.SECRET_KEY) {
-        let o: SecretKey = obj.toType<SecretKey>();
+        const o: SecretKey = obj.toType<SecretKey>();
         console.log(TEMPLATE, defs.rpud("ID", COL_1), defs.rpud(o.id.toString("hex"), COL_2));
         console.log(TEMPLATE, defs.rpud("Mechanism", COL_1), defs.rpud(KeyGenMechanism[o.mechanism], COL_2));
         console.log(TEMPLATE, defs.rpud("Local", COL_1), defs.rpud(o.local, COL_2));
@@ -82,20 +82,20 @@ function print_object_row(obj: Storage) {
 export let cmdObjectList = cmdObject.createCommand("list", {
     description: "enumerates the objects in a given slot",
     note: defs.NOTE_SESSION,
-    example: "> object list"
+    example: "> object list",
 })
     .option("type", {
-        description: "Type of object (key, cert)"
+        description: "Type of object (key, cert)",
     })
-    .on("call", function(cmd: {
+    .on("call", (cmd: {
         type: string;
-    }) {
+    }) => {
         defs.check_session();
-        let objList = consoleApp.session.find();
+        const objList = consoleApp.session.find();
         console.log();
         print_object_header();
         for (let i = 0; i < objList.length; i++) {
-            let obj = objList.items(i);
+            const obj = objList.items(i);
             print_object_row(obj.toType<Storage>());
         }
         console.log();
@@ -106,39 +106,39 @@ export let cmdObjectList = cmdObject.createCommand("list", {
 export let cmdObjectTest = cmdObject.createCommand("test", {
     description: "generates test objects",
     note: defs.NOTE_SESSION,
-    example: "> object test"
+    example: "> object test",
 })
-    .on("call", function(cmd: any) {
+    .on("call", (cmd: any) => {
         defs.check_session();
         consoleApp.session.generateKeyPair(KeyGenMechanism.RSA, {
             keyType: KeyType.RSA,
             encrypt: true,
             modulusBits: 1024,
             publicExponent: new Buffer([3]),
-            label: "test RSA key"
+            label: "test RSA key",
         },
             {
                 keyType: KeyType.RSA,
                 decrypt: true,
-                label: "test RSA key"
+                label: "test RSA key",
             });
     });
 
 export let cmdObjectDelete = cmdObject.createCommand("delete", {
     description: "delete an object from a slot",
     note: defs.NOTE_SESSION,
-    example: "Removes Object from Slot by object's ID 1\n      > object delete --obj 1"
+    example: "Removes Object from Slot by object's ID 1\n      > object delete --obj 1",
 })
     .option("obj", {
         description: "Identificator of object",
-        isRequired: true
+        isRequired: true,
     })
-    .on("call", function(cmd: {
+    .on("call", (cmd: {
         obj: string;
-    }) {
+    }) => {
         defs.check_session();
         if (cmd.obj === "all") {
-            global["readline"].question("Do you really want to remove ALL objects (Y/N)?", (answer: string) => {
+            global.readline.question("Do you really want to remove ALL objects (Y/N)?", (answer: string) => {
                 if (answer && answer.toLowerCase() === "y") {
                     consoleApp.session.destroy();
                     console.log();
@@ -147,22 +147,22 @@ export let cmdObjectDelete = cmdObject.createCommand("delete", {
                 }
                 global["readline"].prompt();
             });
-        }
-        else {
-            let obj = consoleApp.session.getObject<Storage>(Handle.toBuffer(cmd.obj));
-            if (!obj)
+        } else {
+            const obj = consoleApp.session.getObject<Storage>(Handle.toBuffer(cmd.obj));
+            if (!obj) {
                 throw new Error(`Object by ID '${cmd.obj}' is not found`);
+            }
             defs.print_caption(`Object info`);
             print_object_info(obj);
             console.log();
-            global["readline"].question("Do you really want to remove this object (Y/N)?", (answer: string) => {
+            global.readline.question("Do you really want to remove this object (Y/N)?", (answer: string) => {
                 if (answer && answer.toLowerCase() === "y") {
                     consoleApp.session.destroy(obj!);
                     console.log();
                     console.log("Object was successfully removed");
                     console.log();
                 }
-                global["readline"].prompt();
+                global.readline.prompt();
             });
         }
     });
@@ -170,19 +170,20 @@ export let cmdObjectDelete = cmdObject.createCommand("delete", {
 export let cmdObjectInfo = cmdObject.createCommand("info", {
     description: "returns information about a object",
     note: defs.NOTE_SESSION,
-    example: "Return info about Object of Slot by ID 1\n      > object info --obj 1"
+    example: "Return info about Object of Slot by ID 1\n      > object info --obj 1",
 })
     .option("obj", {
         description: "Identificator of object",
-        isRequired: true
+        isRequired: true,
     })
-    .on("call", function(cmd: {
+    .on("call", (cmd: {
         obj: string;
-    }) {
+    }) => {
         defs.check_session();
-        let obj = consoleApp.session.getObject<Storage>(Handle.toBuffer(cmd.obj));
-        if (!obj)
+        const obj = consoleApp.session.getObject<Storage>(Handle.toBuffer(cmd.obj));
+        if (!obj) {
             throw new Error(`Object by ID '${cmd.obj}' is not found`);
+        }
         console.log();
         print_object_info(obj);
         console.log();

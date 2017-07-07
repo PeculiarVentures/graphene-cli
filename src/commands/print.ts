@@ -2,7 +2,7 @@ import * as defs from "./defs";
 
 /**
  * Prints caption to stdout with underline
- * 
+ *
  * ### View:
  * ```
  * <name>
@@ -22,17 +22,20 @@ export function print_caption(name: string) {
  * @param {string} begin=false Padding direction. Boolean value which set left o right direction. False - right padding, true - left padding. Optional. Default false
  */
 export function pud(text: string, size: number, padChar = " ", begin: boolean = false) {
-    let res: string, pad = "";
-    if (typeof text !== "string")
-        text = <any> new String(text);
+    let res: string;
+    let pad = "";
+    if (typeof text !== "string") {
+        // tslint:disable-next-line:no-construct
+        text = new String(text) as string;
+    }
     if (text.length < size) {
-        for (let i = 0; i < (size - text.length); i++)
+        for (let i = 0; i < (size - text.length); i++) {
             pad += padChar;
+        }
     }
     if (!begin) {
         res = text + pad;
-    }
-    else {
+    } else {
         res = pad + text;
     }
     return res;
@@ -60,7 +63,7 @@ export function rpud(text: any, size: number, padChar?: string) {
 
 /**
  * Prints Boolean. X - true, ' ' - false
- * @param {bolean} v
+ * @param {boolean} v
  */
 export function print_bool(v: number) {
     return v ? "x" : " ";

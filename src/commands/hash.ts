@@ -5,20 +5,20 @@ import * as defs from "./defs";
    ==========*/
 export let cmdHash = defs.commander.createCommand("hash", {
     description: "compute a hash for a given file",
-    note: defs.NOTE_SESSION
+    note: defs.NOTE_SESSION,
 })
     .option("alg", {
         description: "the algorithm to hash the file with. Default SHA1." + "\n\n" +
-        defs.pud(" ", 14) + "to get list of supported algoriphms use command" + "\n\n" +
+        defs.pud(" ", 14) + "to get list of supported algorithms use command" + "\n\n" +
         defs.pud(" ", 16) + "> slot algs -s {num} -f h" + "\n",
-        value: "sha1"
+        value: "sha1",
     })
     .option("in", {
         description: "the file to hash",
         set: defs.check_file,
-        isRequired: true
+        isRequired: true,
     })
-    .on("call", function(cmd: any) {
+    .on("call", (cmd: any) => {
         throw new Error("Not implemented");
         // defs.check_session();
         // let rs = fs.createReadStream(cmd.in);

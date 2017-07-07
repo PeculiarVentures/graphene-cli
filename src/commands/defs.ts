@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import * as graphene from "graphene-pk11";
-export {Mechanism} from "graphene-pk11";
-export {commander, Command} from "../lib/commander";
+export { Mechanism } from "graphene-pk11";
+export { commander, Command } from "../lib/commander";
 export * from "./print";
 import * as print from "./print";
 export * from "../lib/timer";
-export {Handle} from "../lib/handle";
-import {Handle} from "../lib/handle";
+export { Handle } from "../lib/handle";
+import { Handle } from "../lib/handle";
 
 // Constants
 export const CAPTION_UNDERLINE = "==============================";
@@ -35,23 +35,25 @@ export interface IConsoleApplication {
 export const consoleApp: IConsoleApplication = {
     module: null!,
     session: null!,
-    slots: null!
+    slots: null!,
 };
 
 /**
  * Checks module was initialized
  */
 export function check_module() {
-    if (!consoleApp.module)
+    if (!consoleApp.module) {
         throw new Error(ERROR_MODULE_NOT_INITIALIZED);
+    }
 }
 
 /**
  * Checks input file path. Throw exception if file is not exist
  */
 export function check_file(v: string): string {
-    if (!fs.existsSync(v) || !fs.statSync(v).isFile())
+    if (!fs.existsSync(v) || !fs.statSync(v).isFile()) {
         throw new Error(`File is not found`);
+    }
     return v;
 }
 
@@ -63,19 +65,28 @@ export const options = {
         description: "Slot index in Module",
         set: (v: any) => {
             check_module();
-            if (!consoleApp.slots)
+            if (!consoleApp.slots) {
                 get_slot_list();
-            let slot = consoleApp.slots.items(v);
-            if (!slot)
+            }
+            let slot: graphene.Slot | null = null;
+            for (let i = 0; i < consoleApp.slots.length; i++) {
+                const item = consoleApp.slots.items(i);
+                if (item.handle.readInt32LE(0).toString() === v) {
+                    slot = item;
+                    break;
+                }
+            }
+            if (!slot) {
                 throw new Error("Can not find Slot by index '" + v + "'");
-            return <any> slot;
+            }
+            return slot;
         },
-        isRequired: true
+        isRequired: true,
     },
     pin: {
         description: "The PIN for the slot",
-        type: "pin"
-    }
+        type: "pin",
+    },
 };
 
 export function get_slot_list() {
@@ -84,11 +95,11 @@ export function get_slot_list() {
 }
 
 export function check_session() {
-  if (!(consoleApp.session)) {
-    let error = new Error("Session is not opened" + "\n\n" +
-      "  " + NOTE_SESSION);
-    throw error;
-  }
+    if (!(consoleApp.session)) {
+        const error = new Error("Session is not opened" + "\n\n" +
+            "  " + NOTE_SESSION);
+        throw error;
+    }
 }
 
 export function print_module_info(mod: graphene.Module) {
@@ -96,7 +107,7 @@ export function print_module_info(mod: graphene.Module) {
     console.log(`  Library: ${mod.libFile}`);
     console.log(`  Name: ${mod.libName}`);
     console.log(`  Cryptoki version: ${mod.cryptokiVersion.major}.${mod.cryptokiVersion.minor}`);
-        console.log();
+    console.log();
 }
 
 export function print_slot_info(slot: graphene.Slot) {
