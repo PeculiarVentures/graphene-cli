@@ -63,29 +63,33 @@ export function check_file(v: string): string {
 export const options = {
     slot: {
         description: "Slot index in Module",
-        set: (v: any) => {
+        set: (v: string) => {
             check_module();
             if (!consoleApp.slots) {
                 get_slot_list();
             }
-            let slot: graphene.Slot | null = null;
-            for (let i = 0; i < consoleApp.slots.length; i++) {
-                const item = consoleApp.slots.items(i);
-                if (item.handle.readInt32LE(0).toString() === v) {
-                    slot = item;
-                    break;
-                }
-            }
-            if (!slot) {
+            try {
+                const slot = consoleApp.slots.items(parseInt(v));
+                return slot;
+            } catch {
                 throw new Error("Can not find Slot by index '" + v + "'");
             }
-            return slot;
         },
         isRequired: true,
     },
     pin: {
         description: "The PIN for the slot",
         type: "pin",
+    },
+    token: {
+        description: "Sets CKA_TOKEN for created object. Default false",
+        shortName: "t",
+        value: false,
+        isRequired: false,
+        set: (v: string) => {
+            // if param present then set it to `true`
+            return true;
+        },
     },
 };
 

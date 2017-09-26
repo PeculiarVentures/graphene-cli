@@ -1,17 +1,17 @@
 import { IKeyPair, Key, KeyGenMechanism, KeyType, MechanismType, PrivateKey, PublicKey, SecretKey, Session } from "graphene-pk11";
 import { AesGcmParams, isNumber } from "graphene-pk11";
 import * as defs from "./defs";
-const {consoleApp} = defs;
+const { consoleApp } = defs;
 
 /* ==========
    Test
    ==========*/
-function gen_AES(session: Session, len: number): SecretKey {
+function gen_AES(session: Session, len: number, token = false): SecretKey {
     return session.generateKey(
         KeyGenMechanism.AES,
         {
             keyType: KeyType.AES,
-            token: false,
+            token,
             modifiable: true,
             valueLen: (len || 128) / 8,
             sign: true,
@@ -23,12 +23,12 @@ function gen_AES(session: Session, len: number): SecretKey {
         });
 }
 
-function gen_RSA(session: Session, size: number, exp: Buffer = new Buffer([3])): IKeyPair {
+function gen_RSA(session: Session, size: number, exp: Buffer = new Buffer([3]), token = false): IKeyPair {
     return session.generateKeyPair(
         KeyGenMechanism.RSA,
         {
             keyType: KeyType.RSA,
-            token: false,
+            token,
             modulusBits: size,
             publicExponent: exp,
             wrap: true,
@@ -37,7 +37,7 @@ function gen_RSA(session: Session, size: number, exp: Buffer = new Buffer([3])):
         },
         {
             keyType: KeyType.RSA,
-            token: false,
+            token,
             private: true,
             sign: true,
             decrypt: true,
@@ -45,24 +45,24 @@ function gen_RSA(session: Session, size: number, exp: Buffer = new Buffer([3])):
         });
 }
 
-function gen_ECDSA(session: Session, name: string, hexOid: string) {
+function gen_ECDSA(session: Session, name: string, hexOid: string, token = false) {
     const keys = session.generateKeyPair(
         KeyGenMechanism.ECDSA,
         {
             keyType: KeyType.ECDSA,
-            token: false,
+            token,
             verify: true,
             paramsEC: new Buffer(hexOid, "hex")
         },
         {
-            token: false,
+            token,
             private: true,
             sign: true,
         });
     return keys;
 }
 
-const gen: { [alg: string]: { [spec: string]: Function } } = {
+const gen: { [alg: string]: { [spec: string]: (session: Session, token?: boolean) => IKeyPair | SecretKey } } = {
     rsa: {
         "1024": gen_RSA_1024,
         "2048": gen_RSA_2048,
@@ -92,62 +92,62 @@ const gen: { [alg: string]: { [spec: string]: Function } } = {
     }
 };
 
-function gen_RSA_1024(session: Session): IKeyPair {
-    return gen_RSA(session, 1024);
+function gen_RSA_1024(session: Session, token = false): IKeyPair {
+    return gen_RSA(session, 1024, Buffer.from([1, 0, 1]), token);
 }
 
-function gen_RSA_2048(session: Session) {
-    return gen_RSA(session, 2048);
+function gen_RSA_2048(session: Session, token = false) {
+    return gen_RSA(session, 2048, Buffer.from([1, 0, 1]), token);
 }
 
-function gen_RSA_4096(session: Session) {
-    return gen_RSA(session, 4096);
+function gen_RSA_4096(session: Session, token = false) {
+    return gen_RSA(session, 4096, Buffer.from([1, 0, 1]), token);
 }
 
-function gen_ECDSA_secp160r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-secp160r1", "06052b81040008");
+function gen_ECDSA_secp160r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-secp160r1", "06052b81040008", token);
 }
 
-function gen_ECDSA_secp192r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-secp192r1", "06082A8648CE3D030101");
+function gen_ECDSA_secp192r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-secp192r1", "06082A8648CE3D030101", token);
 }
 
-function gen_ECDSA_secp256r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-secp256r1", "06082A8648CE3D030107");
+function gen_ECDSA_secp256r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-secp256r1", "06082A8648CE3D030107", token);
 }
 
-function gen_ECDSA_secp384r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-secp384r1", "06052B81040022");
+function gen_ECDSA_secp384r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-secp384r1", "06052B81040022", token);
 }
 
-function gen_ECDSA_secp256k1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-secp256k1", "06052B8104000A");
+function gen_ECDSA_secp256k1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-secp256k1", "06052B8104000A", token);
 }
 
-function gen_ECDSA_brainpoolP192r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-brainpoolP192r1", "06052B8104000A");
+function gen_ECDSA_brainpoolP192r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-brainpoolP192r1", "06052B8104000A", token);
 }
 
-function gen_ECDSA_brainpoolP224r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-brainpoolP224r1", "06092B2403030208010105");
+function gen_ECDSA_brainpoolP224r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-brainpoolP224r1", "06092B2403030208010105", token);
 }
 
-function gen_ECDSA_brainpoolP256r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-brainpoolP256r1", "06092B2403030208010107");
+function gen_ECDSA_brainpoolP256r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-brainpoolP256r1", "06092B2403030208010107", token);
 }
 
-function gen_ECDSA_brainpoolP320r1(session: Session) {
-    return gen_ECDSA(session, "test ECDSA-brainpoolP320r1", "06092B2403030208010109");
+function gen_ECDSA_brainpoolP320r1(session: Session, token = false) {
+    return gen_ECDSA(session, "test ECDSA-brainpoolP320r1", "06092B2403030208010109", token);
 }
 
-function gen_AES_128(session: Session) {
-    return gen_AES(session, 128);
+function gen_AES_128(session: Session, token = false) {
+    return gen_AES(session, 128, token);
 }
-function gen_AES_192(session: Session) {
-    return gen_AES(session, 192);
+function gen_AES_192(session: Session, token = false) {
+    return gen_AES(session, 192, token);
 }
-function gen_AES_256(session: Session) {
-    return gen_AES(session, 256);
+function gen_AES_256(session: Session, token = false) {
+    return gen_AES(session, 256, token);
 }
 
 const BUF_SIZE_DEFAULT = 1024;
@@ -188,46 +188,56 @@ function test_sign(session: Session, cmd: any, prefix: string, postfix: string, 
     try {
         const alg = prefix + "-" + postfix;
         if (cmd.alg === "all" || cmd.alg === prefix || cmd.alg === alg) {
-            const tGen = new defs.Timer();
-            tGen.start();
-            const key = gen[prefix][postfix](session);
-            tGen.stop();
-            // create buffer
-            const buf = new Buffer(BUF_SIZE);
-            const t1 = new defs.Timer();
-            let sig: Buffer;
-            let digested = buf;
-            if (digestAlg) {
-                const digest = session.createDigest(digestAlg);
-                digested = digest.once(buf);
-            }
-            /**
-             * TODO: We need to determine why the first call to the device is so much slower,
-             * it may be the FFI initialization. For now we will exclude this one call from results.
-             */
-            test_sign_operation(session, digested, key, signAlg);
-            t1.start();
-            sig = test_sign_operation(session, digested, key, signAlg);
-            for (let i = 1; i < cmd.it; i++) {
+            let key: IKeyPair | SecretKey | null = null;
+            try {
+                const tGen = new defs.Timer();
+                tGen.start();
+                key = gen[prefix][postfix](session, cmd.token);
+                tGen.stop();
+                // create buffer
+                const buf = new Buffer(BUF_SIZE);
+                const t1 = new defs.Timer();
+                let sig: Buffer;
+                let digested = buf;
+                if (digestAlg) {
+                    const digest = session.createDigest(digestAlg);
+                    digested = digest.once(buf);
+                }
+                /**
+                 * TODO: We need to determine why the first call to the device is so much slower,
+                 * it may be the FFI initialization. For now we will exclude this one call from results.
+                 */
+                test_sign_operation(session, digested, key, signAlg);
+                t1.start();
                 sig = test_sign_operation(session, digested, key, signAlg);
-            }
-            t1.stop();
+                for (let i = 1; i < cmd.it; i++) {
+                    sig = test_sign_operation(session, digested, key, signAlg);
+                }
+                t1.stop();
 
-            const t2 = new defs.Timer();
-            t2.start();
-            for (let i = 0; i < cmd.it; i++) {
-                test_verify_operation(session, digested, key, signAlg, sig);
-            }
-            t2.stop();
+                const t2 = new defs.Timer();
+                t2.start();
+                for (let i = 0; i < cmd.it; i++) {
+                    test_verify_operation(session, digested, key, signAlg, sig);
+                }
+                t2.stop();
 
-            const r1 = Math.round((t1.time / cmd.it) * 1000) / 1000 + "ms";
-            const r2 = Math.round((t2.time / cmd.it) * 1000) / 1000 + "ms";
-            const rs1 = Math.round((1000 / (t1.time / cmd.it)) * 1000) / 1000;
-            const rs2 = Math.round((1000 / (t2.time / cmd.it)) * 1000) / 1000;
-            print_test_sign_row(alg, r1, r2, rs1, rs2);
+                const r1 = Math.round((t1.time / cmd.it) * 1000) / 1000 + "ms";
+                const r2 = Math.round((t2.time / cmd.it) * 1000) / 1000 + "ms";
+                const rs1 = Math.round((1000 / (t1.time / cmd.it)) * 1000) / 1000;
+                const rs2 = Math.round((1000 / (t2.time / cmd.it)) * 1000) / 1000;
+                print_test_sign_row(alg, r1, r2, rs1, rs2);
+            } catch (err) {
+                console.log(`${alg} ${err.message}`);
+            } finally {
+                if (key) {
+                    deleteKeys(session, key);
+                }
+            }
         }
         return true;
     } catch (e) {
+        console.log(e.message);
         // debug("%s-%s\n  %s", prefix, postfix, e.message);
     }
     return false;
@@ -237,12 +247,13 @@ function test_enc(session: Session, cmd: any, prefix: string, postfix: string, e
     try {
         const alg = prefix + "-" + postfix;
         if (cmd.alg === "all" || cmd.alg === prefix || cmd.alg === alg) {
-            const tGen = new defs.Timer();
-            tGen.start();
-            const key = gen[prefix][postfix](session);
-            tGen.stop();
-            // debug("Key generation:", alg.toUpperCase(), tGen.time + "ms");
+            let key: IKeyPair | SecretKey | null = null;
             try {
+                const tGen = new defs.Timer();
+                tGen.start();
+                key = gen[prefix][postfix](session, cmd.token);
+                tGen.stop();
+                // debug("Key generation:", alg.toUpperCase(), tGen.time + "ms");
                 const t1 = new defs.Timer();
                 // create buffer
                 const buf = new Buffer(BUF_SIZE);
@@ -271,12 +282,17 @@ function test_enc(session: Session, cmd: any, prefix: string, postfix: string, e
                 const rs1 = Math.round((1000 / (t1.time / cmd.it)) * 1000) / 1000;
                 const rs2 = Math.round((1000 / (t2.time / cmd.it)) * 1000) / 1000;
                 print_test_sign_row(alg, r1, r2, rs1, rs2);
-            } catch (e) {
-                throw e;
+            } catch (err) {
+                console.log(`${alg} ${err.message}`);
+            } finally {
+                if (key) {
+                    deleteKeys(session, key);
+                }
             }
         }
         return true;
     } catch (e) {
+        console.log(e.message);
         // debug("%s-%s\n  %s", prefix, postfix, e.message);
         // debug(e.stack);
     }
@@ -301,7 +317,7 @@ export let cmdTest = defs.commander.createCommand("test", {
     description: "benchmark device performance for common algorithms",
     note: defs.NOTE_SESSION,
 })
-    .on("call", function(cmd: any) {
+    .on("call", function (cmd: any) {
         this.help();
     }) as defs.Command;
 
@@ -342,6 +358,10 @@ export let cmdTestEnc = cmdTest.createCommand("enc", {
     note: defs.NOTE_SESSION,
     example: "> test enc --alg aes -it 100",
 })
+    .option("alg", {
+        description: "Algorithm name",
+        isRequired: true,
+    })
     .option("buf", {
         description: "Buffer size (bytes)",
         set: (v: string) => {
@@ -367,10 +387,7 @@ export let cmdTestEnc = cmdTest.createCommand("enc", {
         },
         value: 1,
     })
-    .option("alg", {
-        description: "Algorithm name",
-        isRequired: true,
-    })
+    .option("token", defs.options.token)
     .on("call", (cmd: any) => {
         defs.check_session();
         if (!check_enc_algs(cmd.alg)) {
@@ -420,6 +437,10 @@ export let cmdTestSign = cmdTest.createCommand("sign", {
         },
         value: BUF_SIZE_DEFAULT,
     })
+    .option("alg", {
+        description: "Algorithm name",
+        isRequired: true,
+    })
     .option("it", {
         description: "Sets number of iterations. Default 1",
         set: (v: string) => {
@@ -434,10 +455,7 @@ export let cmdTestSign = cmdTest.createCommand("sign", {
         },
         value: 1,
     })
-    .option("alg", {
-        description: "Algorithm name",
-        isRequired: true,
-    })
+    .option("token", defs.options.token)
     .on("call", (cmd: any) => {
         defs.check_session();
         if (!check_sign_algs(cmd.alg)) {
@@ -467,11 +485,16 @@ function test_gen(session: Session, cmd: any, prefix: string, postfix: string) {
         if (cmd.alg === "all" || cmd.alg === prefix || cmd.alg === alg) {
             let time = 0;
             for (let i = 0; i < cmd.it; i++) {
-                const tGen = new defs.Timer();
-                tGen.start();
-                gen[prefix][postfix](session); // key generation
-                tGen.stop();
-                time += tGen.time;
+                try {
+                    const tGen = new defs.Timer();
+                    tGen.start();
+                    const keys = gen[prefix][postfix](session, cmd.token); // key generation
+                    tGen.stop();
+                    deleteKeys(session, keys);
+                    time += tGen.time;
+                } catch (err) {
+                    console.log(`${alg} ${err.message}`);
+                }
             }
             const t1 = Math.round((time / cmd.it) * 1000) / 1000 + "ms";
             const t2 = Math.round((1000 / (time / cmd.it)) * 1000) / 1000;
@@ -480,9 +503,19 @@ function test_gen(session: Session, cmd: any, prefix: string, postfix: string) {
         }
         return false;
     } catch (e) {
+        console.log(e.message);
         // debug("%s-%s\n  %s", prefix, postfix, e.message);
     }
     return false;
+}
+
+function deleteKeys(session: Session, keys: IKeyPair | SecretKey) {
+    if (keys instanceof SecretKey) {
+        session.destroy(keys);
+    } else {
+        session.destroy(keys.privateKey);
+        session.destroy(keys.publicKey);
+    }
 }
 
 function print_test_gen_header() {
@@ -510,6 +543,10 @@ export let cmdTestGen = cmdTest.createCommand("gen", {
     note: defs.NOTE_SESSION,
     example: "> test gen --alg rsa-1024 --it 2",
 })
+    .option("alg", {
+        description: "Algorithm name",
+        isRequired: true,
+    })
     .option("it", {
         description: "Sets number of iterations. Default 1",
         set: (v: string) => {
@@ -524,10 +561,7 @@ export let cmdTestGen = cmdTest.createCommand("gen", {
         },
         value: 1,
     })
-    .option("alg", {
-        description: "Algorithm name",
-        isRequired: true,
-    })
+    .option("token", defs.options.token)
     .on("call", (cmd: any) => {
         defs.check_session();
         if (!check_gen_algs(cmd.alg)) {

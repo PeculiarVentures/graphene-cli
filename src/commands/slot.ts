@@ -209,9 +209,9 @@ export let cmdSlotOpen = cmdSlot.createCommand("open", {
             consoleApp.session.logout();
             consoleApp.session.close();
         }
-        consoleApp.session = cmd.slot.open();
-        const isSessionInitialized = consoleApp.session.slot.getToken().flags & TokenFlag.USER_PIN_INITIALIZED;
-        if (!isSessionInitialized) {
+        consoleApp.session = cmd.slot.open(2 | 4);
+        const isLoginRequired = consoleApp.session.slot.getToken().flags & TokenFlag.LOGIN_REQUIRED;
+        if (isLoginRequired) {
             consoleApp.session.login(cmd.pin);
         }
         console.log();

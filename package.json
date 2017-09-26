@@ -7,16 +7,16 @@
   },
   "main": "build/index.js",
   "dependencies": {
-    "@types/node": "^6.0.46",
     "graphene-pk11": "^2.0.17"
   },
   "devDependencies": {
-    "typescript": "^2.0.6"
+    "@types/node": "^8.0.31",
+    "typescript": "^2.5.2"
   },
   "scripts": {
+    "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "prepub": "npm run build",
     "pub": "npm version patch && npm publish && git push"
   },
   "repository": {
