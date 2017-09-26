@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { MechanismEnum, Module } from "graphene-pk11";
 import * as defs from "./defs";
 const {consoleApp} = defs;
@@ -93,10 +94,7 @@ export let cmdModuleInit = cmdModule.createCommand("init", {
     .on("call", (cmd: {
         path: string;
     }) => {
-        console.log();
-        console.log("Initializing module by config file...");
-        console.log();
-        if (!cmd || !cmd.path) {
+        if (!(cmd && cmd.path)) {
             cmd = { path: "graphene.json" };
         }
         let config: {
@@ -107,7 +105,21 @@ export let cmdModuleInit = cmdModule.createCommand("init", {
             vendor?: string[];
         };
         try {
-            config = require(cmd.path);
+            if (fs.existsSync(cmd.path) && fs.statSync(cmd.path).isFile()) {
+                const json = fs.readFileSync(cmd.path, {encoding: "utf8"});
+                try {
+                    config = JSON.parse(json);
+                } catch {
+                    console.log(`Error on ${cmd.path} file parsing`);
+                    return;
+                }
+            } else {
+                console.log(`Error ${cmd.path} does not exists`);
+                return;
+            }
+            console.log();
+            console.log("Initializing module by config file...");
+            console.log();
             if (config) {
                 consoleApp.module = Module.load(config.lib, config.libName);
                 consoleApp.module.initialize();
@@ -121,7 +133,7 @@ export let cmdModuleInit = cmdModule.createCommand("init", {
             }
         } catch (e) {
             console.log("Error om module initialize");
-            console.log(e);
+            // console.log(e);
         }
         console.log();
     }) as defs.Command;
