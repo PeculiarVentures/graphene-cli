@@ -1,8 +1,7 @@
 # graphene-cli
 [![license](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://raw.githubusercontent.com/PeculiarVentures/graphene-cli/master/LICENSE)
-[![NPM version](https://badge.fury.io/js/graphene-cli.svg)](http://badge.fury.io/graphene-cli)
 
-[![NPM](https://nodei.co/npm-dl/graphene-cli.png?months=2&height=2)](https://nodei.co/npm/graphene-cli/)
+[![NPM](https://nodei.co/npm/graphene-cli.png?compact=true)](https://nodei.co/npm/graphene-cli/)
 
 Graphene is a cross platform command line tool for working with PKCS#11 devices. 
 
@@ -45,4 +44,37 @@ Session is started
 | ECDSA-BRAINPOOLP320R1     |  48.54ms | 56.265ms |   20.602 |   17.773 |
 
 > 
+```
+
+### Open module with config file
+
+JSON file structure
+```
+lib       path to PKCS#11 library
+libName   custom name of library
+slot      Index of slot
+pin       PIN for  
+```
+
+Example of config file for SoftHSMv2
+```
+// config.json
+{
+    "lib": "/usr/local/lib/softhsm/libsofthsm2.so",
+    "libName": "SoftHSMv2.0",
+    "slot": 0,
+    "pin": "password"
+}
+```
+
+Start console application
+
+```
+graphene
+```
+
+Load module from config file
+
+```
+> module init -p config.json
 ```
