@@ -1,6 +1,6 @@
 {
   "name": "graphene-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "graphene-pk11 CLI",
   "bin": {
     "graphene": "build/index.js"
