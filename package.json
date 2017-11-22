@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@types/node": "^8.0.31",
-    "typescript": "^2.5.2"
+    "typescript": "^2.6.1"
   },
   "scripts": {
     "prepare": "npm run build",
