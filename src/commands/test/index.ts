@@ -1,7 +1,7 @@
 import { Command } from "../../command";
 import { EncryptCommand } from "./enc";
 import { GenerateCommand } from "./gen";
-// import { SignCommand } from "./sign";
+import { SignCommand } from "./sign";
 
 export class TestCommand extends Command {
     public name = "test";
@@ -12,7 +12,7 @@ export class TestCommand extends Command {
 
         this.commands.push(new GenerateCommand(this));
         this.commands.push(new EncryptCommand(this));
-        // this.commands.push(new SignCommand(this));
+        this.commands.push(new SignCommand(this));
     }
 
     protected async onRun(options: Assoc<any>): Promise<Command> {

@@ -3,11 +3,11 @@ import * as graphene from "graphene-pk11";
 import { Command } from "../../command";
 import { TEST_KEY_LABEL } from "../../const";
 import { lpad, rpad } from "../../helper";
-import { check_gen_algs, TestOptions } from "./helper";
+import { check_gen_algs, delete_test_keys, open_session, TestOptions } from "./helper";
 
-import { AlgorithmOption } from "./options/alg";
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
+import { AlgorithmOption } from "./options/alg";
 import { IterationOption } from "./options/iteration";
 import { TokenOption } from "./options/token";
 
@@ -197,18 +197,6 @@ function print_test_gen_row(alg: string, t1: string, t2: number) {
     console.log(TEMPLATE, rpad(alg.toUpperCase(), 25), lpad(t1, 8), lpad(t2, 10));
 }
 
-function open_session(params: TestOptions) {
-    const { slot, pin } = params;
-
-    const session = slot.open(graphene.SessionFlag.SERIAL_SESSION | graphene.SessionFlag.RW_SESSION);
-
-    if (pin) {
-        session.login(pin);
-    }
-
-    return session;
-}
-
 function delete_keys(keys: Array<graphene.IKeyPair | graphene.SecretKey>) {
     keys.forEach((key) => {
         if (key instanceof graphene.SecretKey) {
@@ -218,16 +206,6 @@ function delete_keys(keys: Array<graphene.IKeyPair | graphene.SecretKey>) {
             key.publicKey.destroy();
         }
     });
-}
-
-function delete_test_keys(params: TestOptions) {
-    const session = open_session(params);
-    try {
-        session.destroy({ label: TEST_KEY_LABEL });
-    } catch (err) {
-        //
-    }
-    session.close();
 }
 
 async function test_gen(params: TestOptions, prefix = "", postfix = "") {
@@ -293,8 +271,7 @@ export class GenerateCommand extends Command {
         // --slot
         this.options.push(new SlotOption());
         // --alg
-        const algOption = new AlgorithmOption();
-        this.options.push(algOption);
+        this.options.push(new AlgorithmOption());
         // --pin
         this.options.push(new PinOption());
         // --it
@@ -307,8 +284,7 @@ export class GenerateCommand extends Command {
         const slot = params.slot;
 
         if (!check_gen_algs(params.alg)) {
-            const error = new Error("No such algorithm");
-            throw error;
+            throw new Error("No such algorithm");
         }
         console.log();
         print_test_gen_header();

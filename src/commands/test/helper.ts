@@ -1,4 +1,5 @@
 import * as graphene from "graphene-pk11";
+import { TEST_KEY_LABEL } from "../../const";
 
 export interface TestOptions {
     slot: graphene.Slot;
@@ -20,4 +21,26 @@ export function check_enc_algs(alg: string) {
 
 export function check_gen_algs(alg: string) {
     return check_sign_algs(alg) || ["aes", "aes-128", "aes-192", "aes-256"].indexOf(alg) !== -1;
+}
+
+export function open_session(params: TestOptions) {
+    const { slot, pin } = params;
+
+    const session = slot.open(graphene.SessionFlag.SERIAL_SESSION | graphene.SessionFlag.RW_SESSION);
+
+    if (pin) {
+        session.login(pin);
+    }
+
+    return session;
+}
+
+export function delete_test_keys(params: TestOptions) {
+    const session = open_session(params);
+    try {
+        session.destroy({ label: TEST_KEY_LABEL });
+    } catch (err) {
+        //
+    }
+    session.close();
 }
