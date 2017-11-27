@@ -4,7 +4,7 @@ import { Command } from "../../command";
 import { TEST_KEY_LABEL } from "../../const";
 import { lpad, rpad } from "../../helper";
 import { gen } from "./gen";
-import { check_sign_algs, open_session, TestOptions, delete_test_keys } from "./helper";
+import { check_sign_algs, delete_test_keys, open_session, TestOptions } from "./helper";
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
@@ -32,7 +32,6 @@ async function test_sign(params: SignOptions, prefix: string, postfix: string, s
             // create buffer
             const buf = new Buffer(params.buf);
 
-            let sig: Buffer;
             let data = buf;
             if (digestAlg) {
                 const digest = session.createDigest(digestAlg);
@@ -52,6 +51,7 @@ async function test_sign(params: SignOptions, prefix: string, postfix: string, s
 
             await Promise.all(promises)
                 .then((threads) => {
+                    console.log(threads);
                     const sum = threads.reduce((p, c) => {
                         return {
                             sign: p.sign + c.sign,
@@ -61,13 +61,16 @@ async function test_sign(params: SignOptions, prefix: string, postfix: string, s
                     const it = params.it * params.thread;
                     const signPerSec = it / sum.sign;
                     const verifyPerSec = it / sum.verify;
-                    console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((sum.sign / it).toFixed(3), 10), lpad((sum.verify/it).toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyPerSec.toFixed(3), 11));
+
+                    console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((sum.sign / it).toFixed(3), 10), lpad((sum.verify / it).toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyPerSec.toFixed(3), 11));
                 });
 
             const eTime = Date.now();
-            const time = eTime - sTime;
+            const time = (eTime - sTime) / 1000;
 
-            // console.log("Total: %d", time);
+            console.log("");
+            console.log("Sign s: %d", time.toFixed(3));
+            console.log("Sign/s: %d", (params.it * params.thread) / time);
 
             delete_test_keys(params);
         }
@@ -102,19 +105,19 @@ async function test_sign_operation(params: SignOptions, buf: Buffer, signAlg: st
         }
     }
     //#endregion
-    //#region Find signing key
+    //#region Find verifying key
     {
-        const keys = session.find({ label: TEST_KEY_LABEL });
-        for (let i = 0; i < keys.length; i++) {
-            const item = keys.items(i).toType();
-            if (item.class === graphene.ObjectClass.PUBLIC_KEY || item.class === graphene.ObjectClass.SECRET_KEY) {
-                verifyKey = item.toType<graphene.Key>();
-                break;
-            }
-        }
-        if (!verifyKey) {
-            throw new Error("Cannot find test verifying key");
-        }
+        // const keys = session.find({ label: TEST_KEY_LABEL });
+        // for (let i = 0; i < keys.length; i++) {
+        //     const item = keys.items(i).toType();
+        //     if (item.class === graphene.ObjectClass.PUBLIC_KEY || item.class === graphene.ObjectClass.SECRET_KEY) {
+        //         verifyKey = item.toType<graphene.Key>();
+        //         break;
+        //     }
+        // }
+        // if (!verifyKey) {
+        //     throw new Error("Cannot find test verifying key");
+        // }
     }
     //#endregion
 
@@ -144,22 +147,22 @@ async function test_sign_operation(params: SignOptions, buf: Buffer, signAlg: st
     //#region Verify
     {
         const sTime = Date.now();
-        for (let i = 0; i < params.it; i++) {
-            const sig = session.createVerify(signAlg, verifyKey);
-            await new Promise<boolean>((resolve, reject) => {
-                sig.once(buf, signature, (err, ok) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        if (!ok) {
-                            reject(new Error("Signature is invalid"));
-                        } else {
-                            resolve(true);
-                        }
-                    }
-                });
-            });
-        }
+        // for (let i = 0; i < params.it; i++) {
+        //     const sig = session.createVerify(signAlg, verifyKey);
+        //     await new Promise<boolean>((resolve, reject) => {
+        //         sig.once(buf, signature, (err, ok) => {
+        //             if (err) {
+        //                 reject(err);
+        //             } else {
+        //                 if (!ok) {
+        //                     reject(new Error("Signature is invalid"));
+        //                 } else {
+        //                     resolve(true);
+        //                 }
+        //             }
+        //         });
+        //     });
+        // }
         const eTime = Date.now();
         verifyingTime = (eTime - sTime) / 1000;
     }
@@ -172,7 +175,7 @@ async function test_sign_operation(params: SignOptions, buf: Buffer, signAlg: st
     return {
         sign: signingTime,
         verify: verifyingTime,
-    }
+    };
     // console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((signingTime).toFixed(3), 10), lpad(verifyingTime.toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyingPerSec.toFixed(3), 11));
     // console.log("Time: %d, operation(time/%d): %d", time, params.it, time / params.it);
 }
