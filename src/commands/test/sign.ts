@@ -13,7 +13,6 @@ import { BufferOption } from "./options/buffer";
 import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
 import { TokenOption } from "./options/token";
-import { Data } from "graphene-pk11";
 
 async function test_sign(params: SignOptions, prefix: string, postfix: string, signAlg: string, digestAlg?: string) {
     try {
@@ -45,33 +44,30 @@ async function test_sign(params: SignOptions, prefix: string, postfix: string, s
              */
             await test_sign_operation(params, data, signAlg);
 
-            const sTime = new Date();
-            const promises: Array<Promise<number>> = [];
+            const sTime = Date.now();
+            const promises: Array<Promise<{ sign: number, verify: number }>> = [];
             for (let i = 1; i < params.thread; i++) {
                 promises.push(test_sign_operation(params, data, signAlg));
             }
 
-            const times = await Promise.all(promises);
+            await Promise.all(promises)
+                .then((threads) => {
+                    const sum = threads.reduce((p, c) => {
+                        return {
+                            sign: p.sign + c.sign,
+                            verify: p.verify + c.verify,
+                        };
+                    });
+                    const it = params.it * params.thread;
+                    const signPerSec = it / sum.sign;
+                    const verifyPerSec = it / sum.verify;
+                    console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((sum.sign / it).toFixed(3), 10), lpad((sum.verify/it).toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyPerSec.toFixed(3), 11));
+                });
 
-            const eTime = new Date();
-            const time = eTime.getTime() - sTime.getTime();
+            const eTime = Date.now();
+            const time = eTime - sTime;
 
-            console.log("Times:", times.length);
-            console.log("Times:", times.join(","));
-            console.log("Total:", time);
-
-            // const t2 = new defs.Timer();
-            // t2.start();
-            // for (let i = 0; i < cmd.it; i++) {
-            //     test_verify_operation(session, data, key, signAlg, sig);
-            // }
-            // t2.stop();
-
-            // const r1 = Math.round((t1.time / cmd.it) * 1000) / 1000 + "ms";
-            // const r2 = Math.round((t2.time / cmd.it) * 1000) / 1000 + "ms";
-            // const rs1 = Math.round((1000 / (t1.time / cmd.it)) * 1000) / 1000;
-            // const rs2 = Math.round((1000 / (t2.time / cmd.it)) * 1000) / 1000;
-            // print_test_sign_row(alg, r1, r2, rs1, rs2);
+            // console.log("Total: %d", time);
 
             delete_test_keys(params);
         }
@@ -84,43 +80,101 @@ async function test_sign(params: SignOptions, prefix: string, postfix: string, s
 }
 
 async function test_sign_operation(params: SignOptions, buf: Buffer, signAlg: string) {
-    let key: graphene.Key | null = null;
+    let signKey: graphene.Key | null = null;
+    let verifyKey: graphene.Key | null = null;
+    let signingTime = 0;
+    let verifyingTime = 0;
 
     const session = open_session(params);
 
     //#region Find signing key
-    const keys = session.find({ label: TEST_KEY_LABEL });
-    for (let i = 0; i < keys.length; i++) {
-        const item = keys.items(i).toType();
-        if (item.class === graphene.ObjectClass.PRIVATE_KEY || item.class === graphene.ObjectClass.SECRET_KEY) {
-            key = item.toType<graphene.Key>();
-            break;
+    {
+        const keys = session.find({ label: TEST_KEY_LABEL });
+        for (let i = 0; i < keys.length; i++) {
+            const item = keys.items(i).toType();
+            if (item.class === graphene.ObjectClass.PRIVATE_KEY || item.class === graphene.ObjectClass.SECRET_KEY) {
+                signKey = item.toType<graphene.Key>();
+                break;
+            }
+        }
+        if (!signKey) {
+            throw new Error("Cannot find test signing key");
         }
     }
-    if (!key) {
-        throw new Error("Cannot find test signing key");
+    //#endregion
+    //#region Find signing key
+    {
+        const keys = session.find({ label: TEST_KEY_LABEL });
+        for (let i = 0; i < keys.length; i++) {
+            const item = keys.items(i).toType();
+            if (item.class === graphene.ObjectClass.PUBLIC_KEY || item.class === graphene.ObjectClass.SECRET_KEY) {
+                verifyKey = item.toType<graphene.Key>();
+                break;
+            }
+        }
+        if (!verifyKey) {
+            throw new Error("Cannot find test verifying key");
+        }
     }
     //#endregion
 
-    const sTime = new Date();
-    for (let i = 0; i < params.it; i++) {
-        const sig = session.createSign(signAlg, key);
-        await new Promise<Buffer>((resolve, reject) => {
-            sig.once(buf, (err, data) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(data);
-                }
+    let signature: Buffer;
+
+    //#region Sign
+    {
+        const sTime = Date.now();
+        for (let i = 0; i < params.it; i++) {
+            const sig = session.createSign(signAlg, signKey);
+            await new Promise<Buffer>((resolve, reject) => {
+                sig.once(buf, (err, data) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        signature = data;
+                        resolve(data);
+                    }
+                });
             });
-        });
+        }
+        const eTime = Date.now();
+        signingTime = (eTime - sTime) / 1000;
     }
-    const eTime = new Date();
+    //#endregion
+
+    //#region Verify
+    {
+        const sTime = Date.now();
+        for (let i = 0; i < params.it; i++) {
+            const sig = session.createVerify(signAlg, verifyKey);
+            await new Promise<boolean>((resolve, reject) => {
+                sig.once(buf, signature, (err, ok) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        if (!ok) {
+                            reject(new Error("Signature is invalid"));
+                        } else {
+                            resolve(true);
+                        }
+                    }
+                });
+            });
+        }
+        const eTime = Date.now();
+        verifyingTime = (eTime - sTime) / 1000;
+    }
+    //#endregion
+
     session.close();
 
-    const time = eTime.getTime() - sTime.getTime();
-    console.log("Time: %d, operation(time/%d): %d", time, params.it, time / params.it);
-    return time;
+    const signPerSec = params.it / signingTime;
+    const verifyingPerSec = params.it / verifyingTime;
+    return {
+        sign: signingTime,
+        verify: verifyingTime,
+    }
+    // console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((signingTime).toFixed(3), 10), lpad(verifyingTime.toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyingPerSec.toFixed(3), 11));
+    // console.log("Time: %d, operation(time/%d): %d", time, params.it, time / params.it);
 }
 
 function print_test_sign_header() {
