@@ -30,23 +30,24 @@ export class Application extends Command {
     public async run(args: string[]): Promise<Command> {
         let repeat = true;
         while (repeat) {
-            const args = await c.readline.prompt();
+            const args2 = await c.readline.prompt();
             try {
-                const command = await super.run(args);
+                const command = await super.run(args2);
                 if (command instanceof CloseCommand) {
                     repeat = false;
                 }
             } catch (e) {
                 console.error(e);
-                const command = this.getCommand(args);
+                const command = this.getCommand(args2);
                 command.showHelp();
             }
         }
         return this;
     }
 
-    protected onRun(args: string[]): Promise<Command> {
-        throw new Error("Method not implemented.");
+    protected async onRun(args: string[]): Promise<Command> {
+        this.showHelp();
+        return this;
     }
 
 }

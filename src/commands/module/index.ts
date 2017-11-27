@@ -1,6 +1,6 @@
 import { Command } from "../../command";
-import { LoadCommand } from "./load";
 import { InfoCommand } from "./info";
+import { LoadCommand } from "./load";
 
 export class ModuleCommand extends Command {
     public name = "module";
@@ -13,8 +13,9 @@ export class ModuleCommand extends Command {
         this.commands.push(new InfoCommand(this));
     }
 
-    protected onRun(args: string[]): Promise<Command> {
-        throw new Error("Method not implemented.");
+    protected async onRun(args: string[]): Promise<Command> {
+        this.showHelp();
+        return this;
     }
 
 }
