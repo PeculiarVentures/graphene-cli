@@ -133,8 +133,7 @@ async function test_sign_operation(params: SignOptions, buf: Buffer, signAlg: st
                     if (err) {
                         reject(err);
                     } else {
-                        signature = data;
-                        resolve(data);
+                        resolve();
                     }
                 });
             });
@@ -172,12 +171,11 @@ async function test_sign_operation(params: SignOptions, buf: Buffer, signAlg: st
 
     const signPerSec = params.it / signingTime;
     const verifyingPerSec = params.it / verifyingTime;
+    // console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((signingTime).toFixed(3), 10), lpad(verifyingTime.toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyingPerSec.toFixed(3), 11));
     return {
         sign: signingTime,
         verify: verifyingTime,
     };
-    // console.log("|%s|%s|%s|%s|%s|", rpad(params.alg, 27), lpad((signingTime).toFixed(3), 10), lpad(verifyingTime.toFixed(3), 10), lpad(signPerSec.toFixed(3), 11), lpad(verifyingPerSec.toFixed(3), 11));
-    // console.log("Time: %d, operation(time/%d): %d", time, params.it, time / params.it);
 }
 
 function print_test_sign_header() {
@@ -229,9 +227,9 @@ export class SignCommand extends Command {
         console.log();
         print_test_sign_header();
 
-        await test_sign(params, "rsa", "1024", "SHA1_RSA_PKCS");
-        await test_sign(params, "rsa", "2048", "SHA1_RSA_PKCS");
-        await test_sign(params, "rsa", "4096", "SHA1_RSA_PKCS");
+        await test_sign(params, "rsa", "1024", "RSA_PKCS");
+        await test_sign(params, "rsa", "2048", "RSA_PKCS");
+        await test_sign(params, "rsa", "4096", "RSA_PKCS");
         await test_sign(params, "ecdsa", "secp160r1", "ECDSA_SHA1");
         await test_sign(params, "ecdsa", "secp192r1", "ECDSA", "SHA256");
         await test_sign(params, "ecdsa", "secp256r1", "ECDSA", "SHA256");
