@@ -3,7 +3,7 @@ import * as c from "../const";
 
 export class CloseCommand extends Command {
 
-    public name = "close";
+    public name = "exit";
     public description = "Close CLI application";
 
     public async onRun(args: string[]) {

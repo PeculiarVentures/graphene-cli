@@ -1,12 +1,12 @@
 import * as graphene from "graphene-pk11";
-import { TEST_KEY_LABEL } from "../../const";
+import { TEST_KEY_ID } from "../../const";
 
 export interface TestOptions {
     slot: graphene.Slot;
     alg: string;
     pin?: string;
     it: number;
-    token: boolean;
+    thread: number;
 }
 
 export function check_sign_algs(alg: string) {
@@ -38,7 +38,7 @@ export function open_session(params: TestOptions) {
 export function delete_test_keys(params: TestOptions) {
     const session = open_session(params);
     try {
-        session.destroy({ label: TEST_KEY_LABEL });
+        session.destroy({ id: TEST_KEY_ID });
     } catch (err) {
         //
     }
