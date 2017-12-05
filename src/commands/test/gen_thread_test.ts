@@ -9,6 +9,7 @@ export interface IGenThreadTestArgs {
     slot: number;
     it: number;
     pin?: string;
+    token: boolean;
 }
 
 export interface IGenThreadTestResult {
@@ -38,7 +39,7 @@ if (process.send) {
                 //#region Test
                 const sTime = Date.now();
                 for (let i = 0; i < args.it; i++) {
-                    const key = gen[args.prefix][args.postfix](session, true);
+                    const key = gen[args.prefix][args.postfix](session, args.token);
                     //#region Destroy keys
                     if (key instanceof graphene.SecretKey) {
                         key.destroy();

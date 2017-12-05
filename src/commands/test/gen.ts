@@ -16,6 +16,10 @@ import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
 import { TokenOption } from "./options/token";
 
+interface GenOptions extends TestOptions {
+    token: boolean;
+}
+
 function print_test_gen_header() {
     const TEMPLATE = "| %s | %s | %s |";
     console.log(TEMPLATE, rpad("Algorithm", 25), lpad("Generate", 8), lpad("Generate/s", 10));
@@ -38,7 +42,7 @@ function delete_keys(keys: Array<graphene.IKeyPair | graphene.SecretKey>) {
     });
 }
 
-async function test_gen(params: TestOptions, prefix = "", postfix = "") {
+async function test_gen(params: GenOptions, prefix = "", postfix = "") {
     try {
         const { slot, pin, alg, it } = params;
 
@@ -70,7 +74,7 @@ async function test_gen(params: TestOptions, prefix = "", postfix = "") {
     }
 }
 
-async function gen_test_run(params: TestOptions, prefix: string, postfix: string) {
+async function gen_test_run(params: GenOptions, prefix: string, postfix: string) {
     return new Promise<number>((resolve, reject) => {
         const test = fork(path.join(__dirname, "gen_thread_test.js"))
             .on("error", () => {
@@ -95,6 +99,7 @@ async function gen_test_run(params: TestOptions, prefix: string, postfix: string
             lib: params.slot.module.libFile,
             slot: params.slot.module.getSlots(true).indexOf(params.slot),
             pin: params.pin,
+            token: params.token,
             prefix,
             postfix,
         } as IGenThreadTestArgs);
@@ -128,9 +133,11 @@ export class GenerateCommand extends Command {
         this.options.push(new IterationOption());
         // --thread
         this.options.push(new ThreadOption());
+        // --token
+        this.options.push(new TokenOption());
     }
 
-    protected async onRun(params: TestOptions): Promise<Command> {
+    protected async onRun(params: GenOptions): Promise<Command> {
         const slot = params.slot;
 
         if (!check_gen_algs(params.alg)) {
