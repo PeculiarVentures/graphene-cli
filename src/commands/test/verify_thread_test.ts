@@ -1,16 +1,19 @@
-import * as fs from "fs";
 import * as graphene from "graphene-pk11";
 import { TEST_KEY_ID } from "../../const";
 import { prepare_data } from "./sign_helper";
 
-export interface ISignThreadTestArgs {
+export interface IVerifyThreadTestArgs {
     lib: string;
     slot: number;
     it: number;
     pin?: string;
+    /**
+     * hex string
+     */
+    signature: string;
 }
 
-export interface ISignThreadTestResult {
+export interface IVerifyThreadTestResult {
     type: string | "success" | "error";
     message: string;
     time: number;
@@ -18,12 +21,10 @@ export interface ISignThreadTestResult {
 
 if (process.send) {
 
-    process.on("message", (args: ISignThreadTestArgs) => {
+    process.on("message", (args: IVerifyThreadTestArgs) => {
         let time = 0;
         try {
             const mod = graphene.Module.load(args.lib);
-
-            fs.writeFileSync("/tmp/g.log", "sign start\n", { flag: "a+" });
 
             mod.initialize();
 
@@ -37,11 +38,11 @@ if (process.send) {
                 }
 
                 let key: graphene.Key | null = null;
-                //#region Find signing key
+                //#region Find key
                 const objects = session.find({ id: TEST_KEY_ID });
                 for (let i = 0; i < objects.length; i++) {
                     const obj = objects.items(i);
-                    if (obj.class === graphene.ObjectClass.PRIVATE_KEY ||
+                    if (obj.class === graphene.ObjectClass.PUBLIC_KEY ||
                         obj.class === graphene.ObjectClass.SECRET_KEY
                     ) {
                         key = obj.toType<graphene.Key>();
@@ -49,17 +50,21 @@ if (process.send) {
                     }
                 }
                 if (!key) {
-                    throw new Error("Cannot find signing key");
+                    throw new Error("Cannot find verifying key");
                 }
                 //#endregion
 
                 //#region Test
-                const { alg, data } = prepare_data(key);
+                const {alg, data} = prepare_data(key);
+                const signature = Buffer.from(args.signature, "hex");
 
                 const sTime = Date.now();
                 for (let i = 0; i < args.it; i++) {
-                    const sign = session.createSign(alg, key);
-                    sign.once(data);
+                    const verify = session.createVerify(alg, key);
+                    const ok = verify.once(data, signature);
+                    if (!ok) {
+                        throw new Error("Signature is invalid");
+                    }
                 }
                 const eTime = Date.now();
                 time = (eTime - sTime) / 1000;
@@ -72,17 +77,16 @@ if (process.send) {
             }
 
             mod.finalize();
-            fs.writeFileSync("/tmp/g.log", "sign end\n", { flag: "a+" });
             process.send!({
                 type: "success",
                 time,
-            } as ISignThreadTestResult);
+            } as IVerifyThreadTestResult);
         } catch (err) {
             process.send!({
                 type: "error",
                 message: err.message,
                 time,
-            } as ISignThreadTestResult);
+            } as IVerifyThreadTestResult);
         }
     });
 

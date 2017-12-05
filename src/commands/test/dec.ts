@@ -5,10 +5,10 @@ import * as path from "path";
 import { Command } from "../../command";
 import { TEST_KEY_ID } from "../../const";
 import { lpad, rpad } from "../../helper";
-import { IEncThreadTestArgs, IEncThreadTestResult } from "./enc_thread_test";
+import { IDecThreadTestArgs, IDecThreadTestResult } from "./dec_thread_test";
+import { prepare_data } from "./enc_helper";
 import { gen } from "./gen_helper";
 import { check_enc_algs, delete_test_keys, open_session, TestOptions } from "./helper";
-import { prepare_data } from "./sign_helper";
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
@@ -18,26 +18,39 @@ import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
 import { TokenOption } from "./options/token";
 
-async function test_enc(params: TestOptions, prefix: string, postfix: string, mech: graphene.MechanismEnum) {
+async function test_dec(params: TestOptions, prefix: string, postfix: string, mech: graphene.MechanismEnum) {
     try {
         const testAlg = prefix + "-" + postfix;
         if (params.alg === "all" || params.alg === prefix || params.alg === testAlg) {
             delete_test_keys(params);
 
             const session = open_session(params);
-            let keys: graphene.IKeyPair;
+            let keys: graphene.IKeyPair | graphene.SecretKey;
             try {
-                keys = gen[prefix][postfix](session, true) as graphene.IKeyPair;
+                keys = gen[prefix][postfix](session, true);
             } catch (err) {
                 session.close();
                 throw err;
             }
 
+            //#region Prepare data
+            const key = (keys instanceof graphene.SecretKey) ? keys : keys.publicKey;
+            const { alg, data } = prepare_data(
+                key,
+                mech,
+            );
+            const encBuffer = new Buffer(data.length + 1024);
+            const message = session
+                .createCipher(alg, key)
+                .once(data, encBuffer)
+                .toString("hex");
+            //#endregion
+
             session.close();
 
             const promises: Array<Promise<number>> = [];
             for (let i = 0; i < params.thread; i++) {
-                promises.push(enc_test_run(params, mech));
+                promises.push(dec_test_run(params, mech, message));
             }
 
             try {
@@ -51,7 +64,7 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
                         return { time, totalTime };
                     });
 
-                print_test_enc_row(
+                print_test_dec_row(
                     testAlg,
                     time.totalTime / totalIt,
                     totalIt / time.time,
@@ -67,7 +80,7 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
     }
 }
 
-async function enc_test_run(params: TestOptions, mech: graphene.MechanismEnum) {
+async function dec_test_run(params: TestOptions, mech: graphene.MechanismEnum, message: string) {
     return new Promise<number>((resolve, reject) => {
         const test = fork(path.join(__dirname, "enc_thread_test.js"))
             .on("error", () => {
@@ -76,12 +89,12 @@ async function enc_test_run(params: TestOptions, mech: graphene.MechanismEnum) {
                 }
                 reject();
             })
-            .on("message", (res: IEncThreadTestResult) => {
+            .on("message", (res: IDecThreadTestResult) => {
                 if (!test.killed) {
                     test.kill();
                 }
                 if (res.type === "error") {
-                    reject(new Error(`Cannot run encrypt test. ${res.message}`));
+                    reject(new Error(`Cannot run decrypt test. ${res.message}`));
                 } else {
                     resolve(res.time);
                 }
@@ -93,24 +106,25 @@ async function enc_test_run(params: TestOptions, mech: graphene.MechanismEnum) {
             slot: params.slot.module.getSlots(true).indexOf(params.slot),
             pin: params.pin,
             mech,
-        } as IEncThreadTestArgs);
+            message,
+        } as IDecThreadTestArgs);
     });
 }
 
-function print_test_enc_header() {
-    console.log("| %s | %s | %s |", rpad("Algorithm", 25), lpad("Encrypt", 10), lpad("Encrypt/s", 10));
+function print_test_dec_header() {
+    console.log("| %s | %s | %s |", rpad("Algorithm", 25), lpad("Decrypt", 10), lpad("Decrypt/s", 10));
     console.log("|%s|%s:|%s:|", rpad("", 27, "-"), rpad("", 11, "-"), rpad("", 11, "-"));
 }
 
-function print_test_enc_row(alg: string, t1: number, t2: number) {
+function print_test_dec_row(alg: string, t1: number, t2: number) {
     const TEMPLATE = "| %s | %s | %s |";
     console.log(TEMPLATE, rpad(alg.toUpperCase(), 25), lpad(t1.toFixed(3), 10), lpad(t2.toFixed(3), 10));
 }
 
-export class EncryptCommand extends Command {
-    public name = "enc";
+export class DecryptCommand extends Command {
+    public name = "dec";
     public description = [
-        "test encryption performance",
+        "test decryption performance",
         "",
         "Supported algorithms:",
         "  aes, aes-cbc128, aes-cbc192, aes-cbc256",
@@ -138,17 +152,17 @@ export class EncryptCommand extends Command {
             throw new Error("No such algorithm");
         }
         console.log();
-        print_test_enc_header();
+        print_test_dec_header();
 
-        await test_enc(params, "aes", "cbc128", graphene.MechanismEnum.AES_CBC);
-        await test_enc(params, "aes", "cbc192", graphene.MechanismEnum.AES_CBC);
-        await test_enc(params, "aes", "cbc256", graphene.MechanismEnum.AES_CBC);
-        await test_enc(params, "aes", "gcm128", graphene.MechanismEnum.AES_GCM);
-        await test_enc(params, "aes", "gcm192", graphene.MechanismEnum.AES_GCM);
-        await test_enc(params, "aes", "gcm256", graphene.MechanismEnum.AES_GCM);
-        await test_enc(params, "rsa", "1024", graphene.MechanismEnum.RSA_PKCS_OAEP);
-        await test_enc(params, "rsa", "2048", graphene.MechanismEnum.RSA_PKCS_OAEP);
-        await test_enc(params, "rsa", "4096", graphene.MechanismEnum.RSA_PKCS_OAEP);
+        await test_dec(params, "aes", "cbc128", graphene.MechanismEnum.AES_CBC);
+        await test_dec(params, "aes", "cbc192", graphene.MechanismEnum.AES_CBC);
+        await test_dec(params, "aes", "cbc256", graphene.MechanismEnum.AES_CBC);
+        await test_dec(params, "aes", "gcm128", graphene.MechanismEnum.AES_GCM);
+        await test_dec(params, "aes", "gcm192", graphene.MechanismEnum.AES_GCM);
+        await test_dec(params, "aes", "gcm256", graphene.MechanismEnum.AES_GCM);
+        await test_dec(params, "rsa", "1024", graphene.MechanismEnum.RSA_PKCS_OAEP);
+        await test_dec(params, "rsa", "2048", graphene.MechanismEnum.RSA_PKCS_OAEP);
+        await test_dec(params, "rsa", "4096", graphene.MechanismEnum.RSA_PKCS_OAEP);
         console.log();
 
         return this;

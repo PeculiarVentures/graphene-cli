@@ -5,64 +5,65 @@ import * as path from "path";
 import { Command } from "../../command";
 import { TEST_KEY_ID } from "../../const";
 import { lpad, rpad } from "../../helper";
+import { gen } from "./gen_helper";
 import { check_sign_algs, delete_test_keys, open_session, TestOptions } from "./helper";
+import { prepare_data } from "./sign_helper";
+import { ISignThreadTestArgs, ISignThreadTestResult } from "./sign_thread_test";
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
-import { gen } from "./gen_helper";
 import { AlgorithmOption } from "./options/alg";
 import { BufferOption } from "./options/buffer";
 import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
 import { TokenOption } from "./options/token";
-import { ISignThreadTestArgs, ISignThreadTestResult } from "./sign_thread_test";
 
 async function test_sign(params: TestOptions, prefix: string, postfix: string, signAlg: string, digestAlg?: string) {
     try {
-        const alg = prefix + "-" + postfix;
-        if (params.alg === "all" || params.alg === prefix || params.alg === alg) {
+        const testAlg = prefix + "-" + postfix;
+        if (params.alg === "all" || params.alg === prefix || params.alg === testAlg) {
             delete_test_keys(params);
 
             const session = open_session(params);
+            let keys: graphene.IKeyPair;
             try {
-                gen[prefix][postfix](session, true);
+                keys = gen[prefix][postfix](session, true) as graphene.IKeyPair;
             } catch (err) {
                 session.close();
                 throw err;
             }
-            session.close();
 
-            const sTime = Date.now();
+            session.close();
 
             const promises: Array<Promise<number>> = [];
             for (let i = 0; i < params.thread; i++) {
                 promises.push(sign_test_run(params));
             }
 
-            await Promise.all(promises)
-                .then((times) => {
-                    const eTime = Date.now();
-                    const time = (eTime - sTime) / 1000;
-                    const totalTime = times.reduce((p, c) => p + c);
-                    const totalIt = params.it * params.thread;
-                    print_test_sign_row(
-                        alg,
-                        (totalTime / totalIt),
-                        (totalIt / time),
-                    );
-                })
-                .catch((err) => {
-                    console.log(err.message);
-                });
+            try {
+                const totalIt = params.it * params.thread;
+                const sTime = Date.now();
+                const time = await Promise.all(promises)
+                    .then((times) => {
+                        const eTime = Date.now();
+                        const time = (eTime - sTime) / 1000;
+                        const totalTime = times.reduce((p, c) => p + c);
+                        return { time, totalTime };
+                    });
 
+                print_test_sign_row(
+                    testAlg,
+                    time.totalTime / totalIt,
+                    totalIt / time.time,
+                );
+            } catch (err) {
+                console.log(err.message);
+            }
             delete_test_keys(params);
         }
-        return true;
     } catch (e) {
         console.log(e.message);
-        // debug("%s-%s\n  %s", prefix, postfix, e.message);
     }
-    return false;
 }
 
 async function sign_test_run(params: TestOptions) {
@@ -107,7 +108,7 @@ function print_test_sign_row(alg: string, t1: number, t2: number) {
 export class SignCommand extends Command {
     public name = "sign";
     public description = [
-        "test sign and verification performance",
+        "test sign performance",
         "",
         "Supported algorithms:",
         "  rsa, rsa-1024, rsa-2048, rsa-4096,",

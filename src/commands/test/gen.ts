@@ -84,7 +84,7 @@ async function gen_test_run(params: TestOptions, prefix: string, postfix: string
                     test.kill();
                 }
                 if (res.type === "error") {
-                    reject(new Error(`Cannot run sign test. ${res.message}`));
+                    reject(new Error(`Cannot run generate test. ${res.message}`));
                 } else {
                     resolve(res.time);
                 }

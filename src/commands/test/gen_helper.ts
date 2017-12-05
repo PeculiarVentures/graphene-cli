@@ -26,7 +26,6 @@ function gen_RSA(session: graphene.Session, size: number, exp: Buffer = new Buff
     return session.generateKeyPair(
         graphene.KeyGenMechanism.RSA,
         {
-            keyType: graphene.KeyType.RSA,
             id: TEST_KEY_ID,
             label: TEST_KEY_LABEL,
             token,
@@ -37,7 +36,6 @@ function gen_RSA(session: graphene.Session, size: number, exp: Buffer = new Buff
             verify: true,
         },
         {
-            keyType: graphene.KeyType.RSA,
             id: TEST_KEY_ID,
             label: TEST_KEY_LABEL,
             token,

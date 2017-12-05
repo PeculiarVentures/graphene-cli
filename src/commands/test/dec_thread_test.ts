@@ -1,16 +1,17 @@
-import * as fs from "fs";
 import * as graphene from "graphene-pk11";
 import { TEST_KEY_ID } from "../../const";
-import { prepare_data } from "./sign_helper";
+import { prepare_data } from "./enc_helper";
 
-export interface ISignThreadTestArgs {
+export interface IDecThreadTestArgs {
     lib: string;
     slot: number;
     it: number;
     pin?: string;
+    mech: graphene.MechanismEnum;
+    message: string;
 }
 
-export interface ISignThreadTestResult {
+export interface IDecThreadTestResult {
     type: string | "success" | "error";
     message: string;
     time: number;
@@ -18,12 +19,10 @@ export interface ISignThreadTestResult {
 
 if (process.send) {
 
-    process.on("message", (args: ISignThreadTestArgs) => {
+    process.on("message", (args: IDecThreadTestArgs) => {
         let time = 0;
         try {
             const mod = graphene.Module.load(args.lib);
-
-            fs.writeFileSync("/tmp/g.log", "sign start\n", { flag: "a+" });
 
             mod.initialize();
 
@@ -41,7 +40,7 @@ if (process.send) {
                 const objects = session.find({ id: TEST_KEY_ID });
                 for (let i = 0; i < objects.length; i++) {
                     const obj = objects.items(i);
-                    if (obj.class === graphene.ObjectClass.PRIVATE_KEY ||
+                    if (obj.class === graphene.ObjectClass.PUBLIC_KEY ||
                         obj.class === graphene.ObjectClass.SECRET_KEY
                     ) {
                         key = obj.toType<graphene.Key>();
@@ -49,17 +48,19 @@ if (process.send) {
                     }
                 }
                 if (!key) {
-                    throw new Error("Cannot find signing key");
+                    throw new Error("Cannot find encrypting key");
                 }
                 //#endregion
 
                 //#region Test
-                const { alg, data } = prepare_data(key);
+                const { alg } = prepare_data(key, args.mech);
+                const decBuffer = new Buffer(args.message.length);
+                const encBuf = Buffer.from(args.message, "hex");
 
                 const sTime = Date.now();
                 for (let i = 0; i < args.it; i++) {
-                    const sign = session.createSign(alg, key);
-                    sign.once(data);
+                    const enc = session.createDecipher(alg, key);
+                    enc.once(encBuf, decBuffer);
                 }
                 const eTime = Date.now();
                 time = (eTime - sTime) / 1000;
@@ -72,17 +73,16 @@ if (process.send) {
             }
 
             mod.finalize();
-            fs.writeFileSync("/tmp/g.log", "sign end\n", { flag: "a+" });
             process.send!({
                 type: "success",
                 time,
-            } as ISignThreadTestResult);
+            } as IDecThreadTestResult);
         } catch (err) {
             process.send!({
                 type: "error",
                 message: err.message,
                 time,
-            } as ISignThreadTestResult);
+            } as IDecThreadTestResult);
         }
     });
 

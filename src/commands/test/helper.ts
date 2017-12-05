@@ -15,7 +15,7 @@ export function check_sign_algs(alg: string) {
     return list.indexOf(alg) !== -1;
 }
 export function check_enc_algs(alg: string) {
-    const list = ["all", "aes", "aes-cbc128", "aes-cbc192", "aes-cbc256", "aes-gcm128", "aes-gcm192", "aes-gcm256"];
+    const list = ["all", "aes", "aes-cbc128", "aes-cbc192", "aes-cbc256", "aes-gcm128", "aes-gcm192", "aes-gcm256", "rsa", "rsa-1024", "rsa-2048", "rsa-4096"];
     return list.indexOf(alg) !== -1;
 }
 

@@ -5,10 +5,10 @@ import * as path from "path";
 import { Command } from "../../command";
 import { TEST_KEY_ID } from "../../const";
 import { lpad, rpad } from "../../helper";
-import { IEncThreadTestArgs, IEncThreadTestResult } from "./enc_thread_test";
 import { gen } from "./gen_helper";
-import { check_enc_algs, delete_test_keys, open_session, TestOptions } from "./helper";
+import { check_sign_algs, delete_test_keys, open_session, TestOptions } from "./helper";
 import { prepare_data } from "./sign_helper";
+import { IVerifyThreadTestArgs, IVerifyThreadTestResult } from "./verify_thread_test";
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
@@ -18,7 +18,7 @@ import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
 import { TokenOption } from "./options/token";
 
-async function test_enc(params: TestOptions, prefix: string, postfix: string, mech: graphene.MechanismEnum) {
+async function test_verify(params: TestOptions, prefix: string, postfix: string, signAlg: string, digestAlg?: string) {
     try {
         const testAlg = prefix + "-" + postfix;
         if (params.alg === "all" || params.alg === prefix || params.alg === testAlg) {
@@ -33,11 +33,18 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
                 throw err;
             }
 
+            //#region Compute test signature
+            const { alg, data } = prepare_data(keys.privateKey);
+            const signature = session
+                .createSign(alg, keys.privateKey)
+                .once(data).toString("hex");
+            //#endregion
+
             session.close();
 
             const promises: Array<Promise<number>> = [];
             for (let i = 0; i < params.thread; i++) {
-                promises.push(enc_test_run(params, mech));
+                promises.push(verify_test_run(params, signature));
             }
 
             try {
@@ -51,7 +58,7 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
                         return { time, totalTime };
                     });
 
-                print_test_enc_row(
+                print_test_sign_row(
                     testAlg,
                     time.totalTime / totalIt,
                     totalIt / time.time,
@@ -59,7 +66,6 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
             } catch (err) {
                 console.log(err.message);
             }
-
             delete_test_keys(params);
         }
     } catch (e) {
@@ -67,21 +73,21 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
     }
 }
 
-async function enc_test_run(params: TestOptions, mech: graphene.MechanismEnum) {
+async function verify_test_run(params: TestOptions, signature: string) {
     return new Promise<number>((resolve, reject) => {
-        const test = fork(path.join(__dirname, "enc_thread_test.js"))
+        const test = fork(path.join(__dirname, "verify_thread_test.js"))
             .on("error", () => {
                 if (!test.killed) {
                     test.kill();
                 }
                 reject();
             })
-            .on("message", (res: IEncThreadTestResult) => {
+            .on("message", (res: IVerifyThreadTestResult) => {
                 if (!test.killed) {
                     test.kill();
                 }
                 if (res.type === "error") {
-                    reject(new Error(`Cannot run encrypt test. ${res.message}`));
+                    reject(new Error(`Cannot run verify test. ${res.message}`));
                 } else {
                     resolve(res.time);
                 }
@@ -92,30 +98,32 @@ async function enc_test_run(params: TestOptions, mech: graphene.MechanismEnum) {
             lib: params.slot.module.libFile,
             slot: params.slot.module.getSlots(true).indexOf(params.slot),
             pin: params.pin,
-            mech,
-        } as IEncThreadTestArgs);
+            signature,
+        } as IVerifyThreadTestArgs);
     });
 }
 
-function print_test_enc_header() {
-    console.log("| %s | %s | %s |", rpad("Algorithm", 25), lpad("Encrypt", 10), lpad("Encrypt/s", 10));
+function print_test_verify_header() {
+    console.log("| %s | %s | %s |", rpad("Algorithm", 25), lpad("Verify", 10), lpad("Verify/s", 10));
     console.log("|%s|%s:|%s:|", rpad("", 27, "-"), rpad("", 11, "-"), rpad("", 11, "-"));
 }
 
-function print_test_enc_row(alg: string, t1: number, t2: number) {
+function print_test_sign_row(alg: string, t1: number, t2: number) {
     const TEMPLATE = "| %s | %s | %s |";
     console.log(TEMPLATE, rpad(alg.toUpperCase(), 25), lpad(t1.toFixed(3), 10), lpad(t2.toFixed(3), 10));
 }
 
-export class EncryptCommand extends Command {
-    public name = "enc";
+export class VerifyCommand extends Command {
+    public name = "verify";
     public description = [
-        "test encryption performance",
+        "test verification performance",
         "",
         "Supported algorithms:",
-        "  aes, aes-cbc128, aes-cbc192, aes-cbc256",
-        "  aes-gcm128, aes-gcm192, aes-gcm256",
-        "  rsa, rsa-1024, rsa-2048, rsa-4096",
+        "  rsa, rsa-1024, rsa-2048, rsa-4096,",
+        "  ecdsa, ecdsa-secp160r1, ecdsa-secp192r1,",
+        "  ecdsa-secp256r1, ecdsa-secp384r1,",
+        "  ecdsa-secp256k1, ecdsa-brainpoolP192r1, ecdsa-brainpoolP224r1,",
+        "  ecdsa-brainpoolP256r1, ecdsa-brainpoolP320r1",
     ];
 
     constructor(parent?: Command) {
@@ -134,21 +142,24 @@ export class EncryptCommand extends Command {
     }
 
     protected async onRun(params: TestOptions): Promise<Command> {
-        if (!check_enc_algs(params.alg)) {
+        if (!check_sign_algs(params.alg)) {
             throw new Error("No such algorithm");
         }
         console.log();
-        print_test_enc_header();
+        print_test_verify_header();
 
-        await test_enc(params, "aes", "cbc128", graphene.MechanismEnum.AES_CBC);
-        await test_enc(params, "aes", "cbc192", graphene.MechanismEnum.AES_CBC);
-        await test_enc(params, "aes", "cbc256", graphene.MechanismEnum.AES_CBC);
-        await test_enc(params, "aes", "gcm128", graphene.MechanismEnum.AES_GCM);
-        await test_enc(params, "aes", "gcm192", graphene.MechanismEnum.AES_GCM);
-        await test_enc(params, "aes", "gcm256", graphene.MechanismEnum.AES_GCM);
-        await test_enc(params, "rsa", "1024", graphene.MechanismEnum.RSA_PKCS_OAEP);
-        await test_enc(params, "rsa", "2048", graphene.MechanismEnum.RSA_PKCS_OAEP);
-        await test_enc(params, "rsa", "4096", graphene.MechanismEnum.RSA_PKCS_OAEP);
+        await test_verify(params, "rsa", "1024", "RSA_PKCS");
+        await test_verify(params, "rsa", "2048", "RSA_PKCS");
+        await test_verify(params, "rsa", "4096", "RSA_PKCS");
+        await test_verify(params, "ecdsa", "secp160r1", "ECDSA_SHA1");
+        await test_verify(params, "ecdsa", "secp192r1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "secp256r1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "secp384r1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "secp256k1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "brainpoolP192r1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "brainpoolP224r1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "brainpoolP256r1", "ECDSA", "SHA256");
+        await test_verify(params, "ecdsa", "brainpoolP320r1", "ECDSA", "SHA256");
         console.log();
 
         return this;
