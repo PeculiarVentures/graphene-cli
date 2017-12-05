@@ -67,6 +67,8 @@ async function test_gen(params: GenOptions, prefix = "", postfix = "") {
                         (totalIt / time),
                     );
                 });
+
+            delete_test_keys(params);
         }
     } catch (e) {
         console.log(e.message);

@@ -41,12 +41,12 @@ if (process.send) {
                 for (let i = 0; i < args.it; i++) {
                     const key = gen[args.prefix][args.postfix](session, args.token);
                     //#region Destroy keys
-                    if (key instanceof graphene.SecretKey) {
-                        key.destroy();
-                    } else {
-                        key.privateKey.destroy();
-                        key.publicKey.destroy();
-                    }
+                    // if (key instanceof graphene.SecretKey) {
+                        // key.destroy();
+                    // } else {
+                        // key.privateKey.destroy();
+                        // key.publicKey.destroy();
+                    // }
                     //#endregion
                 }
                 const eTime = Date.now();
