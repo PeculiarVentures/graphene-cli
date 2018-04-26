@@ -5,21 +5,14 @@
     ],
     "jsRules": {},
     "rules": {
-        "no-console": [
-            false
-        ],
-        "no-bitwise": false,
-        "max-line-length": [
-            false
-        ],
-        "object-literal-sort-keys": [
-            false
-        ],
+        "no-console": false,
+        "interface-name": false,
+        "prefer-for-of": false,
         "forin": false,
-        "no-string-literal": false,
-        "object-literal-key-quotes": [
-            false
-        ]
+        "no-bitwise": false,
+        "max-line-length": false,
+        "object-literal-key-quotes": false,
+        "object-literal-sort-keys": false
     },
     "rulesDirectory": []
 }
