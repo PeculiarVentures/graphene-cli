@@ -28,8 +28,14 @@ export function open_session(params: TestOptions) {
 
     const session = slot.open(graphene.SessionFlag.SERIAL_SESSION | graphene.SessionFlag.RW_SESSION);
 
-    if (pin) {
-        session.login(pin);
+    if (slot.getToken().flags & graphene.TokenFlag.LOGIN_REQUIRED && pin) {
+        try {
+            session.login(pin);
+        } catch (err) {
+            if (!/CKR_USER_ALREADY_LOGGED_IN/.test(err.message)) {
+                throw err;
+            }
+        }
     }
 
     return session;
