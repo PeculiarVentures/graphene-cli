@@ -2,6 +2,7 @@ import { fork } from "child_process";
 import * as graphene from "graphene-pk11";
 import * as path from "path";
 
+import * as Color from "../../color";
 import { Command } from "../../command";
 import { TEST_KEY_ID } from "../../const";
 import { lpad, rpad } from "../../helper";
@@ -64,12 +65,12 @@ async function test_verify(params: TestOptions, prefix: string, postfix: string,
                     totalIt / time.time,
                 );
             } catch (err) {
-                console.log(err.message);
+                console.log(`${Color.FgRed}Error${Color.Reset}`, testAlg.toUpperCase(), err.message);
             }
             delete_test_keys(params);
         }
     } catch (e) {
-        console.log(e.message);
+        console.log(`${Color.FgRed}Error${Color.Reset}`, e.message);
     }
 }
 

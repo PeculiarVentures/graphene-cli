@@ -1,3 +1,4 @@
+import * as Color from "./color";
 import { Command } from "./command";
 
 import { CloseCommand } from "./commands/close";
@@ -37,7 +38,7 @@ export class Application extends Command {
                     repeat = false;
                 }
             } catch (e) {
-                console.error(e);
+                console.error(`\n${Color.FgRed}Error${Color.Reset}`, e.message);
                 const command = this.getCommand(args2);
                 command.showHelp();
             }

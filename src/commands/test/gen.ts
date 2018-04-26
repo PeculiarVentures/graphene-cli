@@ -2,6 +2,7 @@ import { fork } from "child_process";
 import * as graphene from "graphene-pk11";
 import * as path from "path";
 
+import * as Color from "../../color";
 import { Command } from "../../command";
 import { TEST_KEY_ID, TEST_KEY_LABEL } from "../../const";
 import { lpad, rpad } from "../../helper";
@@ -71,7 +72,7 @@ async function test_gen(params: GenOptions, prefix = "", postfix = "") {
             delete_test_keys(params);
         }
     } catch (e) {
-        console.log(e.message);
+        console.log(`${Color.FgRed}Error${Color.Reset}`, e.message);
         // debug("%s-%s\n  %s", prefix, postfix, e.message);
     }
 }

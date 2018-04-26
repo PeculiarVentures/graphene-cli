@@ -24,8 +24,6 @@ export class LoadCommand extends Command {
     }
 
     protected async onRun(args: LoadOptions): Promise<Command> {
-        console.log(args);
-
         if (data.module) {
             data.module.finalize();
         }
