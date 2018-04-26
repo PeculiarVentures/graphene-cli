@@ -7,12 +7,12 @@
   },
   "main": "build/index.js",
   "dependencies": {
-    "graphene-pk11": "^2.0.17",
-    "tslib": "^1.8.0"
+    "graphene-pk11": "^2.0.34",
+    "tslib": "^1.9.0"
   },
   "devDependencies": {
-    "@types/node": "^8.0.54",
-    "typescript": "^2.6.2"
+    "@types/node": "^9.6.6",
+    "typescript": "^2.8.3"
   },
   "scripts": {
     "prepare": "npm run build",
