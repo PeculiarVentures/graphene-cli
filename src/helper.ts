@@ -1,5 +1,11 @@
+import {randomBytes} from "crypto";
+import {KeyType, ObjectClass, Session} from "graphene-pk11";
+import * as NodeRSA from "node-rsa";
 import * as c from "./const";
-import { PAD_CHAR } from "./const";
+import {PAD_CHAR} from "./const";
+import {ITemplatePair} from "./types";
+import PublicKey = GraphenePkcs11.PublicKey;
+import PrivateKey = GraphenePkcs11.PrivateKey;
 
 /**
  * formats text with paddings
@@ -147,7 +153,96 @@ export function print_description(description: string | string[], padSize = 0) {
     if (typeof description === "string") {
         return description;
     } else {
-        const res = description.map((item, index) => !index ? item : tpad(item, padSize)).join("\n") ;
+        const res = description.map((item, index) => !index ? item : tpad(item, padSize)).join("\n");
         return description.length > 1 ? res + "\n" : res;
     }
+}
+
+export function createTemplate(label: string, extractable: boolean, keyUsages: string[]): ITemplatePair {
+    const idKey = randomBytes(20);
+    return {
+        privateKey: {
+            token: true,
+            class: ObjectClass.PRIVATE_KEY,
+            keyType: KeyType.RSA,
+            private: true,
+            label,
+            id: idKey,
+            extractable,
+            derive: false,
+            sign: keyUsages.indexOf("sign") > -1,
+            decrypt: keyUsages.indexOf("decrypt") > -1,
+            unwrap: keyUsages.indexOf("unwrapKey") > -1,
+        },
+        publicKey: {
+            token: true,
+            class: ObjectClass.PUBLIC_KEY,
+            keyType: KeyType.RSA,
+            private: false,
+            label,
+            id: idKey,
+            verify: keyUsages.indexOf("verify") > -1,
+            encrypt: keyUsages.indexOf("encrypt") > -1,
+            wrap: keyUsages.indexOf("wrapKey") > -1,
+        },
+    };
+}
+
+export function int32toBuffer(value: number | Buffer): Buffer {
+    if (value instanceof Buffer) { return value; }
+    const buf = Buffer.alloc(4);
+    buf[0] = value >> 24;
+    buf[1] = value >> 16;
+    buf[2] = value >> 8;
+    buf[3] = value;
+    return buf;
+}
+
+export function get32IntFromBuffer(buffer: Buffer, offset: number = 0) {
+    let size = 0;
+    if ((size = buffer.length - offset) > 0) {
+        if (size >= 4) {
+            return buffer.readUInt32BE(offset);
+        } else {
+            let res = 0;
+            for (let i = offset + size, d = 0; i > offset; i--, d += 2) {
+                res += buffer[i - 1] * Math.pow(16, d);
+            }
+            return res;
+        }
+    } else {
+        return NaN;
+    }
+}
+
+/**
+ *
+ * @param session
+ * @param rsa
+ * @param label
+ * @param extractable
+ * @param keyUsages
+ */
+export function importRSAPublicKey(session: Session, rsa: NodeRSA, label: string,
+                                   extractable: boolean, keyUsages: string[] = []) {
+    const template = createTemplate(label, extractable, keyUsages).publicKey;
+    const key = rsa.exportKey("components-public");
+    template.publicExponent = int32toBuffer(key.e);
+    template.modulus = key.n;
+    return session.create(template).toType<PublicKey>();
+}
+
+export function importRSAPrivateKey(session: Session, rsa: NodeRSA, label: string,
+                                    extractable: boolean, keyUsages: string[] = []) {
+    const template = createTemplate(label, extractable, keyUsages).privateKey;
+    const key = rsa.exportKey("components");
+    template.publicExponent = int32toBuffer(key.e);
+    template.modulus = key.n;
+    template.privateExponent = key.d;
+    template.prime1 = key.p;
+    template.prime2 = key.q;
+    template.exp1 = key.dmp1;
+    template.exp2 = key.dmq1;
+    template.coefficient = key.coeff;
+    return session.create(template).toType<PrivateKey>();
 }

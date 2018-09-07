@@ -1,4 +1,5 @@
 import { Command } from "../../command";
+import {Assoc} from "../../types";
 import { DecryptCommand } from "./dec";
 import { EncryptCommand } from "./enc";
 import { GenerateCommand } from "./gen";

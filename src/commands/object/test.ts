@@ -1,6 +1,7 @@
 import * as graphene from "graphene-pk11";
 
 import { Command } from "../../command";
+import {Assoc} from "../../types";
 import { get_session } from "../slot/helper";
 
 export class TestCommand extends Command {

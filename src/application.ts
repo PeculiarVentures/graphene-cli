@@ -2,11 +2,11 @@ import * as Color from "./color";
 import { Command } from "./command";
 
 import { CloseCommand } from "./commands/close";
-import { HashCommand } from "./commands/hash/index";
+import { HashCommand } from "./commands/hash";
 import { ModuleCommand } from "./commands/module";
-import { ObjectCommand } from "./commands/object/index";
+import { ObjectCommand } from "./commands/object";
 import { SlotCommand } from "./commands/slot";
-import { TestCommand } from "./commands/test/index";
+import { TestCommand } from "./commands/test";
 import { VersionCommand } from "./commands/version";
 
 import * as c from "./const";
@@ -29,9 +29,12 @@ export class Application extends Command {
     }
 
     public async run(args: string[]): Promise<Command> {
+        const commands = args[2]
+            && args[2].split("\\n").map(((l) => l.split(" ")))
+            || [];
         let repeat = true;
         while (repeat) {
-            const args2 = await c.readline.prompt();
+            const args2 = commands.shift() || await c.readline.prompt();
             try {
                 const command = await super.run(args2);
                 if (command instanceof CloseCommand) {

@@ -5,7 +5,7 @@ export abstract class Option {
     public isRequired = false;
     public defaultValue?: any;
 
-    public parse(value?: string): any {
+    public parse(value?: string, args?: string[]): any {
         return value || this.defaultValue;
     }
 }
