@@ -191,10 +191,10 @@ export function createTemplate(label: string, extractable: boolean, keyUsages: s
 export function int32toBuffer(value: number | Buffer): Buffer {
     if (value instanceof Buffer) { return value; }
     const buf = Buffer.alloc(4);
-    buf[0] = value >> 24;
-    buf[1] = value >> 16;
-    buf[2] = value >> 8;
-    buf[3] = value;
+    buf[0] = (value & 0xff000000) >> 24;
+    buf[1] = (value & 0x00ff0000) >> 16;
+    buf[2] = (value & 0x0000ff00) >> 8;
+    buf[3] = (value & 0x000000ff);
     return buf;
 }
 
