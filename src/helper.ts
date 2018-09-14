@@ -1,12 +1,17 @@
 import {randomBytes} from "crypto";
-import {KeyType, ObjectClass, Session} from "graphene-pk11";
+import {KeyType, ObjectClass, Session, Storage} from "graphene-pk11";
 import * as NodeRSA from "node-rsa";
+import ITemplate = GraphenePkcs11.ITemplate;
+import {KeyComponentsPublic} from "node-rsa";
+import {KeyComponentsPrivate} from "node-rsa";
+import PublicKey = GraphenePkcs11.PublicKey;
+import PrivateKey = GraphenePkcs11.PrivateKey;
 import * as c from "./const";
 import {PAD_CHAR} from "./const";
 import {ITemplatePair} from "./types";
-import PublicKey = GraphenePkcs11.PublicKey;
-import PrivateKey = GraphenePkcs11.PrivateKey;
 
+// @ts-ignore
+import rsaUtils =  require("node-rsa/src/utils");
 /**
  * formats text with paddings
  * @param text
@@ -79,7 +84,7 @@ export class Handle {
      * @returns {string}
      */
     public static toString(buffer: Buffer): string {
-        const buf = new Buffer(8);
+        const buf = Buffer.alloc(8);
         buf.fill(0);
         for (let i = 0; i < buffer.length; i++) {
             buf[i] = buffer[i];
@@ -95,7 +100,7 @@ export class Handle {
      * @returns {Buffer}
      */
     public static toBuffer(hex: string): Buffer {
-        return revert_buffer(new Buffer(prepare_hex(hex), "hex"));
+        return revert_buffer(Buffer.from(prepare_hex(hex), "hex"));
     }
 }
 
@@ -123,7 +128,7 @@ function revert_buffer(buffer: Buffer) {
     if (buffer.length > 8) {
         throw new TypeError("Wrong Buffer size");
     }
-    const b = new Buffer(8);
+    const b = Buffer.alloc(8);
     b.fill(0);
     for (let i = 0; i < buffer.length; i++) {
         b[buffer.length - 1 - i] = buffer[i];
@@ -159,7 +164,7 @@ export function print_description(description: string | string[], padSize = 0) {
 }
 
 export function createTemplate(label: string, extractable: boolean, keyUsages: string[]): ITemplatePair {
-    const idKey = randomBytes(20);
+    const id = randomBytes(20);
     return {
         privateKey: {
             token: true,
@@ -167,7 +172,7 @@ export function createTemplate(label: string, extractable: boolean, keyUsages: s
             keyType: KeyType.RSA,
             private: true,
             label,
-            id: idKey,
+            id,
             extractable,
             derive: false,
             sign: keyUsages.indexOf("sign") > -1,
@@ -180,7 +185,7 @@ export function createTemplate(label: string, extractable: boolean, keyUsages: s
             keyType: KeyType.RSA,
             private: false,
             label,
-            id: idKey,
+            id,
             verify: keyUsages.indexOf("verify") > -1,
             encrypt: keyUsages.indexOf("encrypt") > -1,
             wrap: keyUsages.indexOf("wrapKey") > -1,
@@ -196,23 +201,6 @@ export function int32toBuffer(value: number | Buffer): Buffer {
     buf[2] = (value & 0x0000ff00) >> 8;
     buf[3] = (value & 0x000000ff);
     return buf;
-}
-
-export function get32IntFromBuffer(buffer: Buffer, offset: number = 0) {
-    let size = 0;
-    if ((size = buffer.length - offset) > 0) {
-        if (size >= 4) {
-            return buffer.readUInt32BE(offset);
-        } else {
-            let res = 0;
-            for (let i = offset + size, d = 0; i > offset; i--, d += 2) {
-                res += buffer[i - 1] * Math.pow(16, d);
-            }
-            return res;
-        }
-    } else {
-        return NaN;
-    }
 }
 
 /**
@@ -245,4 +233,41 @@ export function importRSAPrivateKey(session: Session, rsa: NodeRSA, label: strin
     template.exp2 = key.dmq1;
     template.coefficient = key.coeff;
     return session.create(template).toType<PrivateKey>();
+}
+export function exportPublicKey(key: Storage): NodeRSA {
+    const pkey: ITemplate = key.getAttribute({
+        publicExponent: null,
+        modulus: null,
+    });
+    const rsa = new NodeRSA();
+    rsa.importKey({
+        n: pkey.modulus,
+        e: rsaUtils.get32IntFromBuffer(pkey.publicExponent),
+    } as KeyComponentsPublic, "components-public");
+    return rsa;
+}
+
+export function exportPrivateKey(key: Storage): NodeRSA {
+    const pkey: ITemplate = key.getAttribute({
+        publicExponent: null,
+        modulus: null,
+        privateExponent: null,
+        prime1: null,
+        prime2: null,
+        exp1: null,
+        exp2: null,
+        coefficient: null,
+    });
+    const rsa =  new NodeRSA();
+    rsa.importKey({
+      e: rsaUtils.get32IntFromBuffer(pkey.publicExponent),
+      n: pkey.modulus,
+      d: pkey.privateExponent,
+      p: pkey.prime1,
+      q: pkey.prime2,
+      dmp1: pkey.exp1,
+      dmq1: pkey.exp2,
+      coeff: pkey.coefficient,
+  } as KeyComponentsPrivate, "components");
+    return rsa;
 }

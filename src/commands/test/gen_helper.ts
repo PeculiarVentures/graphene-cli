@@ -22,7 +22,7 @@ function gen_AES(session: graphene.Session, len: number, token = false) {
     );
 }
 
-function gen_RSA(session: graphene.Session, size: number, exp: Buffer = new Buffer([3]), token = false) {
+function gen_RSA(session: graphene.Session, size: number, exp: Buffer = Buffer.from([3]), token = false) {
     return session.generateKeyPair(
         graphene.KeyGenMechanism.RSA,
         {
@@ -56,7 +56,7 @@ function gen_ECDSA(session: graphene.Session, name: string, hexOid: string, toke
             label: TEST_KEY_LABEL,
             token,
             verify: true,
-            paramsEC: new Buffer(hexOid, "hex"),
+            paramsEC: Buffer.from(hexOid, "hex"),
         },
         {
             id: TEST_KEY_ID,

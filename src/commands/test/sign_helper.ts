@@ -2,11 +2,11 @@ import * as graphene from "graphene-pk11";
 
 export function prepare_data(key: graphene.Key) {
     let alg: graphene.MechanismType;
-    let data = new Buffer(0);
+    let data = Buffer.alloc(0);
     switch (key.type) {
         case graphene.KeyType.RSA:
             alg = graphene.MechanismEnum.RSA_PKCS;
-            data = new Buffer([
+            data = Buffer.from([
                 // PKCS1 v1.5 padding
                 0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20,
                 // SHA-256
@@ -18,7 +18,7 @@ export function prepare_data(key: graphene.Key) {
             break;
         case graphene.KeyType.ECDSA:
             alg = graphene.MechanismEnum.ECDSA;
-            data = new Buffer([
+            data = Buffer.from([
                 // SHA-256
                 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
                 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a,
