@@ -1,6 +1,6 @@
 {
   "name": "graphene-cli",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "graphene-pk11 CLI",
   "bin": {
     "graphene": "build/index.js"
@@ -34,7 +34,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PeculiarVentures/graphene-cli.git"
+    "url": "git+https://github.com/virtru/graphene-cli.git"
   },
   "author": "",
   "license": "MIT",

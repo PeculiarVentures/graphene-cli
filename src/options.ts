@@ -9,3 +9,8 @@ export abstract class Option {
         return value || this.defaultValue;
     }
 }
+
+export class OptionsSet {
+    public options: Option[] = [];
+    public type: "every" | "some" | "none" = "none";
+}

@@ -1,6 +1,8 @@
 import {KeyGenMechanism, ObjectClass, PrivateKey, PublicKey, SecretKey, Storage } from "graphene-pk11";
 import * as NodeRSA from "node-rsa";
 import { exportPrivateKey, exportPublicKey, Handle, rpad} from "../../helper";
+import * as Stream from "stream";
+import {Writable} from "stream";
 export function print_object_header() {
     console.log("| %s | %s | %s |", rpad("ID", 4), rpad("Class", 15), rpad("Label", 30));
     console.log("|%s|%s|%s|", rpad("", 6, "-"), rpad("", 17, "-"), rpad("", 32, "-"));
@@ -65,14 +67,28 @@ export function print_object_info(obj: Storage) {
     }
 }
 
-export function printSecureObj(obj: Storage, format: NodeRSA.FormatPem) {
+/**
+ *
+ * @param obj {Storage}
+ * @param format {NodeRSA.FormatPem}
+ * @param output {WriteStream}
+ */
+export async function writeSecureObj(obj: Storage,
+                                     format: NodeRSA.FormatPem,
+                                     output: Writable = process.stdout) {
+    let key: string;
     if (obj.class === ObjectClass.PUBLIC_KEY) {
-        const k = exportPublicKey(obj);
-        console.log(k.exportKey(format));
+        key = exportPublicKey(obj).exportKey(format);
     } else if (obj.class === ObjectClass.PRIVATE_KEY) {
-        const k = exportPrivateKey(obj);
-        console.log(k.exportKey(format));
+        key = exportPrivateKey(obj).exportKey(format);
     } else {
         throw new Error("Support only public or private key");
     }
+    return new Promise((resolve, reject) => {
+        output.write(key, (err: any) => {
+            if (err) reject(err);
+            resolve();
+        });
+    })
+
 }

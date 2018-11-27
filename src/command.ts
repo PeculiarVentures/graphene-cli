@@ -1,4 +1,4 @@
-import { Option } from "./options";
+import {Option} from "./options";
 import {Assoc} from "./types";
 
 export abstract class Command {
