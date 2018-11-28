@@ -26,7 +26,7 @@
     "typescript": "^2.8.3"
   },
   "scripts": {
-    "prepare": "npm run build",
+    "postinstall": "npm run build",
     "test": "mocha --opts ./test/main.opts --require ts-node/register",
     "build": "tsc",
     "build:img": "docker build -t cli-local  --build-arg ssh_prv_key=\"$(cat ~/.ssh/id_rsa)\" --build-arg ssh_pub_key=\"$(cat ~/.ssh/id_rsa.pub)\" --squash .",
