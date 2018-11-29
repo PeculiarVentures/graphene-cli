@@ -54,7 +54,7 @@ if (process.send) {
 
                 //#region Test
                 const { alg } = prepare_data(key, args.mech);
-                const decBuffer = new Buffer(args.message.length);
+                const decBuffer = Buffer.alloc(args.message.length);
                 const encBuf = Buffer.from(args.message, "hex");
 
                 const sTime = Date.now();

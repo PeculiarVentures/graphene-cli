@@ -1,4 +1,5 @@
 import { Command } from "../../command";
+import {Assoc} from "../../types";
 import { AlgorithmsCommand } from "./algs";
 import { InfoCommand } from "./info";
 import { ListCommand } from "./list";

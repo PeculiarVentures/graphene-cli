@@ -1,4 +1,5 @@
-import { Option } from "./options";
+import {Option} from "./options";
+import {Assoc} from "./types";
 
 export abstract class Command {
 
@@ -81,7 +82,7 @@ export abstract class Command {
             if (!res.hasOwnProperty(option.name)) {
                 res2[option.name] = option.defaultValue;
             } else {
-                res2[option.name] = option.parse(res[option.name]);
+                res2[option.name] = option.parse(res[option.name], args);
             }
         }
 
@@ -92,5 +93,4 @@ export abstract class Command {
 
 }
 
-import { HelpCommand } from "./commands/help"; import { lpad, print_description } from "./helper";
-
+import { HelpCommand } from "./commands/help";

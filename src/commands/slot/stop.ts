@@ -1,5 +1,6 @@
 import { Command } from "../../command";
 import { data } from "../../data";
+import {Assoc} from "../../types";
 import { get_session } from "./helper";
 
 export class StopCommand extends Command {

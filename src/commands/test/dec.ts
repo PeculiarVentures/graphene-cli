@@ -40,7 +40,7 @@ async function test_dec(params: TestOptions, prefix: string, postfix: string, me
                 key,
                 mech,
             );
-            const encBuffer = new Buffer(data.length + 1024);
+            const encBuffer = Buffer.alloc(data.length + 1024);
             const message = session
                 .createCipher(alg, key)
                 .once(data, encBuffer)

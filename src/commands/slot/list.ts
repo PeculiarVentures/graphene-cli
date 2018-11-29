@@ -1,5 +1,6 @@
 import { Command } from "../../command";
 import { print_caption } from "../../helper";
+import {Assoc} from "../../types";
 import { get_module } from "../module/helper";
 import { print_slot } from "./helper";
 

@@ -3,6 +3,7 @@ import * as graphene from "graphene-pk11";
 import { Command } from "../../command";
 import { data } from "../../data";
 
+import {SlotLabelOption} from "../../options/label";
 import { PinOption } from "../../options/pin";
 import { ReadWriteOption } from "../../options/read_write";
 import { SlotOption } from "../../options/slot";
@@ -21,6 +22,7 @@ export class OpenCommand extends Command {
         super(parent);
 
         this.options.push(new SlotOption());
+        this.options.push(new SlotLabelOption());
         this.options.push(new PinOption());
         this.options.push(new ReadWriteOption());
     }
@@ -35,7 +37,6 @@ export class OpenCommand extends Command {
         if (params.pin) {
             data.session.login(params.pin);
         }
-
         return this;
     }
 
