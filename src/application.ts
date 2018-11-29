@@ -43,7 +43,11 @@ export class Application extends Command {
                     repeat = false;
                 }
             } catch (e) {
-                console.error(e);
+                const lastCommand = commands[commands.length - 1];
+                if (args.length >= 2 && Array.isArray(lastCommand) && lastCommand[0] === "exit") {
+                    console.error(e);
+                    process.exit(1);
+                }
                 console.error(`\n${Color.FgRed}Error${Color.Reset}`, e.message);
                 const command = this.getCommand(args2);
                 command.showHelp();
