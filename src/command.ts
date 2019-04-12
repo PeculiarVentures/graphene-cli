@@ -33,6 +33,7 @@ export abstract class Command {
                 return command.getCommand(args.slice(1));
             }
         }
+        console.log('help',this);
         return this;
     }
 
