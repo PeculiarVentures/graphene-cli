@@ -1,84 +1,59 @@
 import * as graphene from "graphene-pk11";
 
 import { Command } from "../../command";
-import {get_session} from "../slot/helper";
-import {GEN_KEY_LABEL} from "../../const";
+
 import {SlotOption} from "../../options/slot";
-import {PinOption} from "../../options/pin";
 import {DataOption} from "./options/data";
 import {Option} from "../../options";
+import {HandleOption} from "./options/handle";
+import {get_session} from "../slot/helper";
+import {AlgorithmOption} from "./options/alg";
+
 
 interface signOptions extends Option{
-    lib: string;
-    slot?: number;
-    pin?:string;
-    data?:string;
+    slot: number;
+    handle:string;
+    data:string;
+    alg:string;
 }
 
 export class SignCommand extends Command{
     public name = "sign";
-    public description = "Signs with an SECP256k1 Key";
+    public description = [
+        "Signs with a key",
+        "",
+        "Supported algorithms:",
+        "  rsa-1024, rsa-2049, rsa-4096",
+        "  ecdsa",
+    ];
 
     constructor(parent?: Command) {
         super(parent);
-        // --slot
+
         this.options.push(new SlotOption());
-        // --pin
-        this.options.push(new PinOption());
-        // --data
+        this.options.push(new HandleOption());
         this.options.push(new DataOption());
+        this.options.push(new AlgorithmOption());
 
     }
     protected async onRun(params:signOptions):Promise<Command>{
-        const mod = graphene.Module.load(params.lib);
-        mod.initialize();
+        const session = get_session();
 
-        if(!params.slot){
-            console.log("No slot found. Defaulting to 0.");
-            params.slot = 0;
-        }
+        let alg: graphene.MechanismType;
 
-        const slot = mod.getSlots(params.slot, true);
-        const session = slot.open(graphene.SessionFlag.SERIAL_SESSION);
-
-
-        if (params.pin) {
-            session.login(params.pin);
+        if(graphene.MechanismEnum[params.alg.toUpperCase() as any] !== undefined){
+            alg = graphene.MechanismEnum[params.alg.toUpperCase() as any];
         }else{
-            console.log("Session did not log in. May not work.");
+            throw new Error("No mechanism found")
         }
-
-        let key: graphene.Key | null = null;
-        //#region Find signing key
-
-        const objects = session.find({ id: GEN_KEY_LABEL });
-        for (let i = 0; i < objects.length; i++) {
-            const obj = objects.items(i);
-            if (obj.class === graphene.ObjectClass.PRIVATE_KEY ||
-                obj.class === graphene.ObjectClass.SECRET_KEY
-            ) {
-                key = obj.toType<graphene.Key>();
-                break;
-            }
-
-        }
-        if (!key) {
+        if (!session.getObject(Buffer.from(params.handle,'hex'))) {
             throw new Error("Cannot find signing key");
         }
-        var sign = session.createSign("ECDSA_SHA256",key.privateKey);
-        if(!params.data){
-            console.log("No data found. Signing empty string");
-            params.data = '';
-        }
+        const privObj = session.getObject(Buffer.from(params.handle,'hex')).toType<graphene.Key>();
 
-        sign.update(params.data);
-        var signature = sign.final();
-        console.log("Signature ECDSA_SHA256:",signature.toString('hex'));
+        var signature = session.createSign(alg,privObj).once(Buffer.from(params.data,'hex'));
+        console.log(signature.toString('hex'));
 
         return this;
     }
-
-
-
-
 }

@@ -11,7 +11,7 @@ function generate_iv(blockSize: number) {
 
 const AES_CBC = {
     name: "AES_CBC_PAD",
-    params: new Buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
+    params: Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
 };
 
 const AES_GCM = {
@@ -29,7 +29,7 @@ export function prepare_data(key: graphene.Key, mech: graphene.MechanismEnum): {
         case graphene.MechanismEnum.AES_CBC:
             return {
                 // 32 bytes
-                data: new Buffer([
+                data: Buffer.from([
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
@@ -40,7 +40,7 @@ export function prepare_data(key: graphene.Key, mech: graphene.MechanismEnum): {
         case graphene.MechanismEnum.AES_GCM:
             return {
                 // 32 bytes
-                data: new Buffer([
+                data: Buffer.from([
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
                     1, 2, 3, 4, 5, 6, 7, 8, 9, 0,
@@ -51,7 +51,7 @@ export function prepare_data(key: graphene.Key, mech: graphene.MechanismEnum): {
         case graphene.MechanismEnum.RSA_PKCS_OAEP:
             return {
                 // 32 bytes
-                data: new Buffer([
+                data: Buffer.from([
                     1, 2, 3, 4, 5, 6, 7, 8,
                 ]),
                 alg: RSA_OAEP,

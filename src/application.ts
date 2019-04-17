@@ -2,11 +2,11 @@ import * as Color from "./color";
 import { Command } from "./command";
 
 import { CloseCommand } from "./commands/close";
-import { HashCommand } from "./commands/hash/index";
+import { HashCommand } from "./commands/hash";
 import { ModuleCommand } from "./commands/module";
-import { ObjectCommand } from "./commands/object/index";
+import { ObjectCommand } from "./commands/object";
 import { SlotCommand } from "./commands/slot";
-import { TestCommand } from "./commands/test/index";
+import { TestCommand } from "./commands/test";
 import { VersionCommand } from "./commands/version";
 
 import * as c from "./const";

@@ -1,66 +1,78 @@
 import * as graphene from "graphene-pk11";
-import { Command } from "../../command";
+import {Command} from "../../command";
 import {get_session} from "../slot/helper";
-import {GEN_KEY_LABEL, TEST_KEY_ID} from "../../const";
 import {TokenOption} from "../test/options/token";
 import {Option} from "../../options";
+import {gen} from "../../gen_helper";
+import {AlgorithmOption} from "./options/alg";
 
-
-/*interface generateOptions{
-    slot: graphene.Slot;
-    alg: string;
-}*/
 
 interface GenerateOptions extends Option{
     token: boolean;
+    alg:string;
 }
 export class GenerateCommand extends Command{
     public name = "generate";
-    public description = "Generates an SECP256k1 Key";
+    public description = [
+        "Generates a key",
+            "",
+            "Supported algorithms:",
+            "  rsa-1024, rsa-2048, rsa-4096",
+            "  ecdsa-secp160r1, ecdsa-secp192r1, ecdsa-secp256r1",
+            "  ecdsa-secp384r1, ecdsa-secp256k1",
+            "  ecdsa-brainpoolP192r1, ecdsa-brainpoolP224r1,",
+            "  ecdsa-brainpoolP256r1, ecdsa-brainpoolP320r1",
+            "  aes-128, aes-192, aes-256",
+        ];
 
     constructor(parent?: Command) {
         super(parent);
         // --token
         this.options.push(new TokenOption());
+        //--alg or -a
+        this.options.push(new AlgorithmOption())
     }
 
     protected async onRun(params:GenerateOptions):Promise<Command>{
         const session = get_session();
+        generate(params,session);
 
-        var keys = gen_ECDSA_secp256k1(session,params.token)
 
-
-        if(keys){
-            console.log('Key generation successful!')
-        }else{
-            console.log('Key generation failed!')
-        }
         return this;
     }
 }
+function generate(params:GenerateOptions, session: graphene.Session){
+    var splitIndex = params.alg.indexOf('-');
+    if(splitIndex===-1){
+        console.log('Incorrect algorithm format.');
+        return;
+    }else{
+        let alg = params.alg.slice(0,splitIndex);
+        let curve = params.alg.slice(splitIndex+1);
+        if(!gen[alg][curve]){
+            console.log('Invalid algorithm');
+            return;
+        }
+        let name =  alg.toUpperCase()+'-'+curve;
+        let key = gen[alg][curve](session, name, params.token);
 
-function gen_ECDSA(session: graphene.Session, name: string, hexOid: string, token = false) {
-    return session.generateKeyPair(
-        graphene.KeyGenMechanism.ECDSA,
-        {
-            keyType: graphene.KeyType.ECDSA,
-            id: TEST_KEY_ID,
-            label: GEN_KEY_LABEL,
-            token,
-            verify: true,
-            //paramsEC: new Buffer(hexOid, "hex"),
-            paramsECDSA: graphene.NamedCurve.getByName('secp256r1').value,
-        },
-        {
-            keyType: graphene.KeyType.ECDSA,
-            id: TEST_KEY_ID,
-            label: GEN_KEY_LABEL,
-            token,
-            private: true,
-            sign: true,
-        },
-    );
-}
-function gen_ECDSA_secp256k1(session: graphene.Session, token = false) {
-    return gen_ECDSA(session, "ECDSA-secp256k1", "06052B8104000A", token);
+        if (!(key instanceof graphene.SecretKey)) {
+            key.privateKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
+            key.publicKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
+
+            //DER/BER encoded public key
+            let rawKey = key.publicKey.getAttribute('pointEC').toString('hex');
+
+            //Removed prefix
+            let pubKey = rawKey.slice(6);
+            let objHandle = key.privateKey.handle.toString('hex');
+            console.log('Outputting signature and handle: \n');
+            console.log(pubKey+objHandle);
+        }else if (key instanceof graphene.SecretKey){
+            key.setAttribute({id: Buffer.from(key.handle)});
+            let objHandle = key.handle.toString('hex');
+            console.log('Outputting handle: \n');
+            console.log(objHandle)
+        }
+    }
 }

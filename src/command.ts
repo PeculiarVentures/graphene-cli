@@ -5,15 +5,24 @@ export abstract class Command {
     public abstract name: string;
     public abstract description: string | string[];
     public readonly parent?: Command;
+    public sharedParams: Assoc<any> = {};
     public commands: Command[] = [];
     public options: Option[] = [];
 
     constructor(parent?: Command) {
         this.parent = parent;
 
+        if(parent){
+            this.sharedParams = parent.sharedParams;
+        }
+
         if (!(this instanceof HelpCommand)) {
             (this as any).commands.push(new HelpCommand(this));
         }
+    }
+
+    public setSharedParams(params:Assoc<any>){
+        this.sharedParams = params;
     }
 
     public async showHelp() {
@@ -33,7 +42,6 @@ export abstract class Command {
                 return command.getCommand(args.slice(1));
             }
         }
-        console.log('help',this);
         return this;
     }
 
