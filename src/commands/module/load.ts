@@ -31,7 +31,9 @@ export class LoadCommand extends Command {
         data.module.initialize();
 
         const mod = get_module();
-        print_module_info(mod);
+        if(!this.sharedParams.quiet){
+            print_module_info(mod);
+        }
 
 
         return this;

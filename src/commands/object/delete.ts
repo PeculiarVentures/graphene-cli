@@ -26,39 +26,38 @@ export class DeleteCommand extends Command {
         const session = get_session();
         if(params.oid === undefined) {
 
-            if(this.sharedParams.dynamic){
-                session.destroy();
-            }else{
+            if(!this.sharedParams.dynamic){
                 const answer = (await readline.question("Do you really want to remove ALL objects (Y/N)? ")).toLowerCase();
-                if (answer && (answer === "yes" || answer === "y")) {
-                    session.destroy();
-                    console.log();
-                    console.log("All Objects were successfully removed");
-                    console.log();
+                if (answer && (answer !== "yes" && answer !== "y")) {
+                    return this;
                 }
             }
-        }else {
+            session.destroy();
+            if(!this.sharedParams.quiet){
+                console.log();
+                console.log("All Objects were successfully removed");
+                console.log();
+            }
+        }else{
             const objects = session.find({id:Buffer.from(params.oid,'hex')});
             if (!objects) {
                 throw new Error(`Object by ID '${params.oid}' is not found`);
             }
-            if(this.sharedParams.dynamic){
-                for(let i=0;i<objects.length;i++){
-                    session.destroy(objects.items(i)!);
-                }
-            }else{
+            if(!this.sharedParams.dynamic){
                 const answer = (await readline.question("Do you really want to remove this object (Y/N)? ")).toLowerCase();
-                if(answer&&(answer==='yes'||answer=='y')){
-                    // Print info about object
-                    print_caption(`Object info`);
-                    for(var i=0;i<objects.length;i++){
-                        var object = objects.items(i).toType<graphene.Storage>()
-                        print_object_info(object);
-                        session.destroy(objects.items(i)!);
-                        console.log('Object(s) deleted.');
-                    }
+                if (answer && (answer !== "yes" && answer !== "y")) {
+                    return this;
                 }
             }
+            // Print info about object
+            print_caption(`Object info`);
+            for(var i=0;i<objects.length;i++){
+                var object = objects.items(i).toType<graphene.Storage>()
+                print_object_info(object);
+                session.destroy(objects.items(i)!);
+                console.log('Object(s) deleted.');
+            }
+
         }
         return this;
     }

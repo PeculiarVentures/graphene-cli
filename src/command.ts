@@ -21,10 +21,6 @@ export abstract class Command {
         }
     }
 
-    public setSharedParams(params:Assoc<any>){
-        this.sharedParams = params;
-    }
-
     public async showHelp() {
         this.commands.some((cmd) => {
             if (cmd instanceof HelpCommand) {
@@ -102,4 +98,3 @@ export abstract class Command {
 }
 
 import { HelpCommand } from "./commands/help"; import { lpad, print_description } from "./helper";
-

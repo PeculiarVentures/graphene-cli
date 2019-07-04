@@ -32,22 +32,32 @@ export class Dynamic extends Command {
 
     public async run(args: string[]): Promise<Command> {
             try {
-                args = args.slice(2); //Reset to old pointer
-
-                while(args.length>0){
-                    let command = this.getCommand(args);
-                    let params = command.parseOptions(args);
-                    let paramCount = (Object.entries(params).length) + (Object.values(params).length);
-                    if(args.length%2==1){
-                        console.error(`\n${Color.FgRed}Error${Color.Reset}`, 'Options formatting');
-                        break;
+                let parsedArgs = args.slice(2);
+                let commandIndex = [];
+                let specialCmds = [];
+                for(let i=0;i<parsedArgs.length;i++){
+                    for(let cmd in this.commands){
+                        if(parsedArgs[i] === this.commands[cmd].name){
+                            commandIndex.push(i)
+                        }
                     }
-                    let lastCmdIndex = args.indexOf(command.name);
-                    let fullCmdIndex = lastCmdIndex + paramCount + 1;
-                    let argsRun = args.slice(0,fullCmdIndex);
-
-                    args = args.slice(fullCmdIndex);
-                    await super.run(argsRun);
+                    if(commandIndex.length==0){
+                        specialCmds.push(parsedArgs[i]);
+                    }
+                }
+                for(let cmd of specialCmds){
+                    if(cmd.toLowerCase()=='-quiet'){
+                        this.sharedParams.quiet = true;
+                    }
+                }
+                for(let i=0;i<commandIndex.length;i++){
+                    if(commandIndex.length-1==i){
+                        let lastCommand = parsedArgs.slice(commandIndex[i]);
+                        await super.run(lastCommand);
+                    }else{
+                        let nextCommand = parsedArgs.slice(commandIndex[i],commandIndex[i+1]);
+                        await super.run(nextCommand);
+                    }
                 }
                 c.readline.close();
             } catch (e) {

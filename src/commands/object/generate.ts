@@ -35,13 +35,13 @@ export class GenerateCommand extends Command{
 
     protected async onRun(params:GenerateOptions):Promise<Command>{
         const session = get_session();
-        generate(params,session);
+        generate(params,session,this);
 
 
         return this;
     }
 }
-function generate(params:GenerateOptions, session: graphene.Session){
+function generate(params:GenerateOptions, session: graphene.Session, command: GenerateCommand){
     var splitIndex = params.alg.indexOf('-');
     if(splitIndex===-1){
         console.log('Incorrect algorithm format.');
@@ -66,12 +66,16 @@ function generate(params:GenerateOptions, session: graphene.Session){
             //Removed prefix
             let pubKey = rawKey.slice(6);
             let objHandle = key.privateKey.handle.toString('hex');
-            console.log('Outputting signature and handle: \n');
+            if(!command.sharedParams.quiet){
+                console.log('Outputting signature and handle: \n');
+            }
             console.log(pubKey+objHandle);
         }else if (key instanceof graphene.SecretKey){
             key.setAttribute({id: Buffer.from(key.handle)});
             let objHandle = key.handle.toString('hex');
-            console.log('Outputting handle: \n');
+            if(!command.sharedParams.quiet) {
+                console.log('Outputting handle: \n');
+            }
             console.log(objHandle)
         }
     }
