@@ -6,7 +6,6 @@ import { get_session } from "../slot/helper";
 import { ObjectIdOption } from "./options/obj_id";
 import {print_caption} from "../../helper";
 import {print_object_info} from "./helper";
-import {Dynamic} from "../../dynamic";
 
 interface DeleteOptions {
     oid?: string;
@@ -26,7 +25,7 @@ export class DeleteCommand extends Command {
         const session = get_session();
         if(params.oid === undefined) {
 
-            if(!this.sharedParams.dynamic){
+            if(!this.sharedParams.nonInteractive){
                 const answer = (await readline.question("Do you really want to remove ALL objects (Y/N)? ")).toLowerCase();
                 if (answer && (answer !== "yes" && answer !== "y")) {
                     return this;
@@ -43,19 +42,25 @@ export class DeleteCommand extends Command {
             if (!objects) {
                 throw new Error(`Object by ID '${params.oid}' is not found`);
             }
-            if(!this.sharedParams.dynamic){
+            if(!this.sharedParams.nonInteractive){
                 const answer = (await readline.question("Do you really want to remove this object (Y/N)? ")).toLowerCase();
                 if (answer && (answer !== "yes" && answer !== "y")) {
                     return this;
                 }
             }
             // Print info about object
-            print_caption(`Object info`);
+            if(!this.sharedParams.quiet) {
+                print_caption(`Object info`);
+            }
             for(var i=0;i<objects.length;i++){
-                var object = objects.items(i).toType<graphene.Storage>()
-                print_object_info(object);
-                session.destroy(objects.items(i)!);
-                console.log('Object(s) deleted.');
+                var object = objects.items(i).toType<graphene.Storage>();
+                if(!this.sharedParams.quiet) {
+                    print_object_info(object);
+                }
+                session.destroy(object!);
+                if(!this.sharedParams.quiet) {
+                    console.log('Object(s) deleted.');
+                }
             }
 
         }

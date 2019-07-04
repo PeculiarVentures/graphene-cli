@@ -35,48 +35,42 @@ export class GenerateCommand extends Command{
 
     protected async onRun(params:GenerateOptions):Promise<Command>{
         const session = get_session();
-        generate(params,session,this);
+        var splitIndex = params.alg.indexOf('-');
+        
+        if(splitIndex===-1){
+            console.error('Incorrect algorithm format.');
+        }else{
+            let alg = params.alg.slice(0,splitIndex);
+            let curve = params.alg.slice(splitIndex+1);
+            if(!gen[alg][curve]){
+                console.error('Invalid algorithm');
+            }
+            let name =  alg.toUpperCase()+'-'+curve;
+            let key = gen[alg][curve](session, name, params.token);
 
+            if (!(key instanceof graphene.SecretKey)) {
+                key.privateKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
+                key.publicKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
 
+                //DER/BER encoded public key
+                let rawKey = key.publicKey.getAttribute('pointEC').toString('hex');
+
+                //Removed prefix
+                let pubKey = rawKey.slice(6);
+                let objHandle = key.privateKey.handle.toString('hex');
+                if(!this.sharedParams.quiet){
+                    console.log('Outputting signature and handle: \n');
+                }
+                console.log(pubKey+objHandle);
+            }else if (key instanceof graphene.SecretKey){
+                key.setAttribute({id: Buffer.from(key.handle)});
+                let objHandle = key.handle.toString('hex');
+                if(!this.sharedParams.quiet) {
+                    console.log('Outputting handle: \n');
+                }
+                console.log(objHandle)
+            }
+        }
         return this;
-    }
-}
-function generate(params:GenerateOptions, session: graphene.Session, command: GenerateCommand){
-    var splitIndex = params.alg.indexOf('-');
-    if(splitIndex===-1){
-        console.log('Incorrect algorithm format.');
-        return;
-    }else{
-        let alg = params.alg.slice(0,splitIndex);
-        let curve = params.alg.slice(splitIndex+1);
-        if(!gen[alg][curve]){
-            console.log('Invalid algorithm');
-            return;
-        }
-        let name =  alg.toUpperCase()+'-'+curve;
-        let key = gen[alg][curve](session, name, params.token);
-
-        if (!(key instanceof graphene.SecretKey)) {
-            key.privateKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
-            key.publicKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
-
-            //DER/BER encoded public key
-            let rawKey = key.publicKey.getAttribute('pointEC').toString('hex');
-
-            //Removed prefix
-            let pubKey = rawKey.slice(6);
-            let objHandle = key.privateKey.handle.toString('hex');
-            if(!command.sharedParams.quiet){
-                console.log('Outputting signature and handle: \n');
-            }
-            console.log(pubKey+objHandle);
-        }else if (key instanceof graphene.SecretKey){
-            key.setAttribute({id: Buffer.from(key.handle)});
-            let objHandle = key.handle.toString('hex');
-            if(!command.sharedParams.quiet) {
-                console.log('Outputting handle: \n');
-            }
-            console.log(objHandle)
-        }
     }
 }

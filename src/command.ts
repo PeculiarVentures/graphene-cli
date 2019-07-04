@@ -41,6 +41,15 @@ export abstract class Command {
         return this;
     }
 
+    public hasCommand(commandName: string){
+        for (const command of this.commands) {
+            if (command.name === commandName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public async run(args: string[]): Promise<Command> {
         // console.log(`${this.name}:`, args);
         const command = this.getCommand(args);

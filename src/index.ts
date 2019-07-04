@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import { Application } from "./application";
-import {Dynamic} from "./dynamic";
+import {NonInteractive} from "./non_interactive";
 
 async function main(args: string[]) {
     if(args.length>2){
-        const app = new Dynamic();
+        const app = new NonInteractive();
         await app.run(args);
     }else{
         const app = new Application();
