@@ -5,11 +5,16 @@ export abstract class Command {
     public abstract name: string;
     public abstract description: string | string[];
     public readonly parent?: Command;
+    public sharedParams: Assoc<any> = {};
     public commands: Command[] = [];
     public options: Option[] = [];
 
     constructor(parent?: Command) {
         this.parent = parent;
+
+        if(parent){
+            this.sharedParams = parent.sharedParams;
+        }
 
         if (!(this instanceof HelpCommand)) {
             (this as any).commands.push(new HelpCommand(this));
@@ -34,6 +39,15 @@ export abstract class Command {
             }
         }
         return this;
+    }
+
+    public hasCommand(commandName: string){
+        for (const command of this.commands) {
+            if (command.name === commandName) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public async run(args: string[]): Promise<Command> {
@@ -93,4 +107,3 @@ export abstract class Command {
 }
 
 import { HelpCommand } from "./commands/help"; import { lpad, print_description } from "./helper";
-

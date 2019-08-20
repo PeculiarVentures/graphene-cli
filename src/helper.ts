@@ -73,7 +73,7 @@ export class Handle {
      * @returns {string}
      */
     public static toString(buffer: Buffer): string {
-        const buf = new Buffer(8);
+        const buf = Buffer.alloc(8);
         buf.fill(0);
         for (let i = 0; i < buffer.length; i++) {
             buf[i] = buffer[i];
@@ -89,7 +89,7 @@ export class Handle {
      * @returns {Buffer}
      */
     public static toBuffer(hex: string): Buffer {
-        return revert_buffer(new Buffer(prepare_hex(hex), "hex"));
+        return revert_buffer(Buffer.from(prepare_hex(hex), "hex"));
     }
 }
 
@@ -117,7 +117,7 @@ function revert_buffer(buffer: Buffer) {
     if (buffer.length > 8) {
         throw new TypeError("Wrong Buffer size");
     }
-    const b = new Buffer(8);
+    const b = Buffer.alloc(8);
     b.fill(0);
     for (let i = 0; i < buffer.length; i++) {
         b[buffer.length - 1 - i] = buffer[i];

@@ -4,20 +4,17 @@ import * as path from "path";
 
 import * as Color from "../../color";
 import { Command } from "../../command";
-import { TEST_KEY_ID } from "../../const";
 import { lpad, rpad } from "../../helper";
 import { IEncThreadTestArgs, IEncThreadTestResult } from "./enc_thread_test";
-import { gen } from "./gen_helper";
+import { gen } from "../../gen_helper";
 import { check_enc_algs, delete_test_keys, open_session, TestOptions } from "./helper";
-import { prepare_data } from "./sign_helper";
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
 import { AlgorithmOption } from "./options/alg";
-import { BufferOption } from "./options/buffer";
 import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
-import { TokenOption } from "./options/token";
+import {TEST_KEY_LABEL} from "../../const";
 
 async function test_enc(params: TestOptions, prefix: string, postfix: string, mech: graphene.MechanismEnum) {
     try {
@@ -28,7 +25,8 @@ async function test_enc(params: TestOptions, prefix: string, postfix: string, me
             const session = open_session(params);
             let keys: graphene.IKeyPair;
             try {
-                keys = gen[prefix][postfix](session, true) as graphene.IKeyPair;
+                let name = `${TEST_KEY_LABEL}-${testAlg}`;
+                keys = gen[prefix][postfix](session, name, true) as graphene.IKeyPair;
             } catch (err) {
                 session.close();
                 throw err;

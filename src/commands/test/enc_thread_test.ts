@@ -53,7 +53,7 @@ if (process.send) {
 
                 //#region Test
                 const { alg, data } = prepare_data(key, args.mech);
-                const encBuffer = new Buffer(data.length + 1024);
+                const encBuffer = Buffer.alloc(data.length + 1024);
 
                 const sTime = Date.now();
                 for (let i = 0; i < args.it; i++) {

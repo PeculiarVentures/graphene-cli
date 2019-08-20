@@ -10,7 +10,7 @@ import { check_gen_algs, delete_test_keys, open_session, TestOptions } from "./h
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
-import { gen } from "./gen_helper";
+import { gen } from "../../gen_helper";
 import { IGenThreadTestArgs, IGenThreadTestResult } from "./gen_thread_test";
 import { AlgorithmOption } from "./options/alg";
 import { IterationOption } from "./options/iteration";
