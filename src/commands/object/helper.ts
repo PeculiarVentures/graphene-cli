@@ -1,5 +1,5 @@
 import * as graphene from "graphene-pk11";
-import { rpad, Handle } from "../../helper";
+import { Handle, rpad } from "../../helper";
 
 export function print_object_header() {
     console.log("| %s | %s | %s |", rpad("ID", 4), rpad("Class", 15), rpad("Label", 30));

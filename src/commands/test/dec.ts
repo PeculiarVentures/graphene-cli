@@ -4,11 +4,11 @@ import * as path from "path";
 
 import * as Color from "../../color";
 import { Command } from "../../command";
-import {TEST_KEY_ID, TEST_KEY_LABEL} from "../../const";
+import { TEST_KEY_LABEL } from "../../const";
+import { gen } from "../../gen_helper";
 import { lpad, rpad } from "../../helper";
 import { IDecThreadTestArgs, IDecThreadTestResult } from "./dec_thread_test";
 import { prepare_data } from "./enc_helper";
-import { gen } from "../../gen_helper";
 import { check_enc_algs, delete_test_keys, open_session, TestOptions } from "./helper";
 
 import { PinOption } from "../../options/pin";
@@ -26,7 +26,7 @@ async function test_dec(params: TestOptions, prefix: string, postfix: string, me
             const session = open_session(params);
             let keys: graphene.IKeyPair | graphene.SecretKey;
             try {
-                let name = `${TEST_KEY_LABEL}-${testAlg}`;
+                const name = `${TEST_KEY_LABEL}-${testAlg}`;
                 keys = gen[prefix][postfix](session, name, true);
             } catch (err) {
                 session.close();
@@ -59,9 +59,9 @@ async function test_dec(params: TestOptions, prefix: string, postfix: string, me
                 const time = await Promise.all(promises)
                     .then((times) => {
                         const eTime = Date.now();
-                        const time = (eTime - sTime) / 1000;
+                        const time2 = (eTime - sTime) / 1000;
                         const totalTime = times.reduce((p, c) => p + c);
-                        return { time, totalTime };
+                        return { time: time2, totalTime };
                     });
 
                 print_test_dec_row(

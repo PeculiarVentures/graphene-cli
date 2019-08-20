@@ -8,7 +8,7 @@ import { get_module } from "../module/helper";
 import { print_slot_algs_header, print_slot_algs_row } from "./helper";
 
 interface AlgorithmsOption {
-    slot: graphene.Slot,
+    slot: graphene.Slot;
     flags: string;
 }
 

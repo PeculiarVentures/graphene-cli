@@ -1,6 +1,6 @@
 import * as graphene from "graphene-pk11";
-import { print_caption } from "../../helper";
 import { data } from "../../data";
+import { print_caption } from "../../helper";
 
 export function print_module_info(mod: graphene.Module) {
     print_caption("Module info");

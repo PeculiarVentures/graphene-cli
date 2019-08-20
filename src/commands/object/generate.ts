@@ -1,17 +1,16 @@
 import * as graphene from "graphene-pk11";
 import {Command} from "../../command";
+import {gen} from "../../gen_helper";
+import {Option} from "../../options";
 import {get_session} from "../slot/helper";
 import {TokenOption} from "../test/options/token";
-import {Option} from "../../options";
-import {gen} from "../../gen_helper";
 import {AlgorithmOption} from "./options/alg";
 
-
-interface GenerateOptions extends Option{
+interface GenerateOptions extends Option {
     token: boolean;
-    alg:string;
+    alg: string;
 }
-export class GenerateCommand extends Command{
+export class GenerateCommand extends Command {
     public name = "generate";
     public description = [
         "Generates a key",
@@ -29,46 +28,46 @@ export class GenerateCommand extends Command{
         super(parent);
         // --token
         this.options.push(new TokenOption());
-        //--alg or -a
-        this.options.push(new AlgorithmOption())
+        // --alg or -a
+        this.options.push(new AlgorithmOption());
     }
 
-    protected async onRun(params:GenerateOptions):Promise<Command>{
+    protected async onRun(params: GenerateOptions): Promise<Command> {
         const session = get_session();
-        var splitIndex = params.alg.indexOf('-');
-        
-        if(splitIndex===-1){
-            console.error('Incorrect algorithm format.');
-        }else{
-            let alg = params.alg.slice(0,splitIndex);
-            let curve = params.alg.slice(splitIndex+1);
-            if(!gen[alg][curve]){
-                console.error('Invalid algorithm');
+        const splitIndex = params.alg.indexOf("-");
+
+        if (splitIndex === -1) {
+            console.error("Incorrect algorithm format.");
+        } else {
+            const alg = params.alg.slice(0, splitIndex);
+            const curve = params.alg.slice(splitIndex + 1);
+            if (!gen[alg][curve]) {
+                console.error("Invalid algorithm");
             }
-            let name =  alg.toUpperCase()+'-'+curve;
-            let key = gen[alg][curve](session, name, params.token);
+            const name =  alg.toUpperCase() + "-" + curve;
+            const key = gen[alg][curve](session, name, params.token);
 
             if (!(key instanceof graphene.SecretKey)) {
-                key.privateKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
-                key.publicKey.setAttribute({id:Buffer.from(key.privateKey.handle)});
+                key.privateKey.setAttribute({id: Buffer.from(key.privateKey.handle)});
+                key.publicKey.setAttribute({id: Buffer.from(key.privateKey.handle)});
 
-                //DER/BER encoded public key
-                let rawKey = key.publicKey.getAttribute('pointEC').toString('hex');
+                // DER/BER encoded public key
+                const rawKey = key.publicKey.getAttribute("pointEC").toString("hex");
 
-                //Removed prefix
-                let pubKey = rawKey.slice(6);
-                let objHandle = key.privateKey.handle.toString('hex');
-                if(!this.sharedParams.quiet){
-                    console.log('Outputting signature and handle: \n');
+                // Removed prefix
+                const pubKey = rawKey.slice(6);
+                const objHandle = key.privateKey.handle.toString("hex");
+                if (!this.sharedParams.quiet) {
+                    console.log("Outputting signature and handle: \n");
                 }
-                console.log(pubKey+objHandle);
-            }else if (key instanceof graphene.SecretKey){
+                console.log(pubKey + objHandle);
+            } else if (key instanceof graphene.SecretKey) {
                 key.setAttribute({id: Buffer.from(key.handle)});
-                let objHandle = key.handle.toString('hex');
-                if(!this.sharedParams.quiet) {
-                    console.log('Outputting handle: \n');
+                const objHandle = key.handle.toString("hex");
+                if (!this.sharedParams.quiet) {
+                    console.log("Outputting handle: \n");
                 }
-                console.log(objHandle)
+                console.log(objHandle);
             }
         }
         return this;

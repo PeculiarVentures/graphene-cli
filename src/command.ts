@@ -12,7 +12,7 @@ export abstract class Command {
     constructor(parent?: Command) {
         this.parent = parent;
 
-        if(parent){
+        if (parent) {
             this.sharedParams = parent.sharedParams;
         }
 
@@ -41,7 +41,7 @@ export abstract class Command {
         return this;
     }
 
-    public hasCommand(commandName: string){
+    public hasCommand(commandName: string) {
         for (const command of this.commands) {
             if (command.name === commandName) {
                 return true;

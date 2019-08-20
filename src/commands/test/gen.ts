@@ -4,13 +4,11 @@ import * as path from "path";
 
 import * as Color from "../../color";
 import { Command } from "../../command";
-import { TEST_KEY_ID, TEST_KEY_LABEL } from "../../const";
 import { lpad, rpad } from "../../helper";
-import { check_gen_algs, delete_test_keys, open_session, TestOptions } from "./helper";
+import { check_gen_algs, delete_test_keys, TestOptions } from "./helper";
 
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
-import { gen } from "../../gen_helper";
 import { IGenThreadTestArgs, IGenThreadTestResult } from "./gen_thread_test";
 import { AlgorithmOption } from "./options/alg";
 import { IterationOption } from "./options/iteration";
@@ -32,20 +30,9 @@ function print_test_gen_row(alg: string, t1: number, t2: number) {
     console.log(TEMPLATE, rpad(alg.toUpperCase(), 25), lpad(t1.toFixed(3), 8), lpad(t2.toFixed(3), 10));
 }
 
-function delete_keys(keys: Array<graphene.IKeyPair | graphene.SecretKey>) {
-    keys.forEach((key) => {
-        if (key instanceof graphene.SecretKey) {
-            key.destroy();
-        } else {
-            key.privateKey.destroy();
-            key.publicKey.destroy();
-        }
-    });
-}
-
 async function test_gen(params: GenOptions, prefix = "", postfix = "") {
     try {
-        const { slot, pin, alg, it } = params;
+        const { alg } = params;
 
         const testAlg = prefix + "-" + postfix;
         if (alg === "all" || alg === prefix || alg === testAlg) {
@@ -141,7 +128,6 @@ export class GenerateCommand extends Command {
     }
 
     protected async onRun(params: GenOptions): Promise<Command> {
-        const slot = params.slot;
 
         if (!check_gen_algs(params.alg)) {
             throw new Error("No such algorithm");

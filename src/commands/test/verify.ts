@@ -4,18 +4,18 @@ import * as path from "path";
 
 import * as Color from "../../color";
 import { Command } from "../../command";
-import { lpad, rpad } from "../../helper";
 import { gen } from "../../gen_helper";
+import { lpad, rpad } from "../../helper";
 import { check_sign_algs, delete_test_keys, open_session, TestOptions } from "./helper";
 import { prepare_data } from "./sign_helper";
 import { IVerifyThreadTestArgs, IVerifyThreadTestResult } from "./verify_thread_test";
 
+import {TEST_KEY_LABEL} from "../../const";
 import { PinOption } from "../../options/pin";
 import { SlotOption } from "../../options/slot";
 import { AlgorithmOption } from "./options/alg";
 import { IterationOption } from "./options/iteration";
 import { ThreadOption } from "./options/thread";
-import {TEST_KEY_LABEL} from "../../const";
 
 async function test_verify(params: TestOptions, prefix: string, postfix: string, signAlg: string, digestAlg?: string) {
     try {
@@ -26,7 +26,7 @@ async function test_verify(params: TestOptions, prefix: string, postfix: string,
             const session = open_session(params);
             let keys: graphene.IKeyPair;
             try {
-                let name = `${TEST_KEY_LABEL}-${testAlg}`;
+                const name = `${TEST_KEY_LABEL}-${testAlg}`;
                 keys = gen[prefix][postfix](session, name, true) as graphene.IKeyPair;
             } catch (err) {
                 session.close();
@@ -53,9 +53,9 @@ async function test_verify(params: TestOptions, prefix: string, postfix: string,
                 const time = await Promise.all(promises)
                     .then((times) => {
                         const eTime = Date.now();
-                        const time = (eTime - sTime) / 1000;
+                        const time2 = (eTime - sTime) / 1000;
                         const totalTime = times.reduce((p, c) => p + c);
-                        return { time, totalTime };
+                        return { time: time2, totalTime };
                     });
 
                 print_test_sign_row(

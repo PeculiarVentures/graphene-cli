@@ -1,7 +1,6 @@
 import * as graphene from "graphene-pk11";
 import {TEST_KEY_ID} from "./const";
 
-
 function gen_AES(session: graphene.Session, name: string, len: number, token = false) {
     return session.generateKey(
         graphene.KeyGenMechanism.AES,
@@ -9,7 +8,7 @@ function gen_AES(session: graphene.Session, name: string, len: number, token = f
             keyType: graphene.KeyType.AES,
             id: TEST_KEY_ID,
             label: name,
-            token: token,
+            token,
             modifiable: true,
             valueLen: (len || 128) >> 3,
             sign: true,
@@ -26,10 +25,10 @@ function gen_RSA(session: graphene.Session, name: string, size: number, exp: Buf
     return session.generateKeyPair(
         graphene.KeyGenMechanism.RSA,
         {
-            keyType:graphene.KeyType.RSA,
+            keyType: graphene.KeyType.RSA,
             id: TEST_KEY_ID,
-            label:  name+'-pubKey',
-            token:token,
+            label:  name + "-pubKey",
+            token,
             modulusBits: size,
             publicExponent: exp,
             wrap: true,
@@ -38,7 +37,7 @@ function gen_RSA(session: graphene.Session, name: string, size: number, exp: Buf
         },
         {
             id: TEST_KEY_ID,
-            label: name+'-privKey',
+            label: name + "-privKey",
             token,
             private: true,
             sign: true,
@@ -54,15 +53,15 @@ function gen_ECDSA(session: graphene.Session, name: string, hexOid: string, toke
         {
             keyType: graphene.KeyType.ECDSA,
             id: TEST_KEY_ID,
-            label: name+'-pubKey',
-            token:token,
+            label: name + "-pubKey",
+            token,
             verify: true,
             paramsEC: Buffer.from(hexOid, "hex"),
         },
         {
             id: TEST_KEY_ID,
-            label: name+'-privKey',
-            token:token,
+            label: name + "-privKey",
+            token,
             private: true,
             sign: true,
         },
@@ -100,15 +99,15 @@ export const gen: { [alg: string]: { [spec: string]: (session: graphene.Session,
 };
 
 function gen_RSA_1024(session: graphene.Session, name: string, token = false) {
-    return gen_RSA(session,name, 1024, Buffer.from([1, 0, 1]), token);
+    return gen_RSA(session, name, 1024, Buffer.from([1, 0, 1]), token);
 }
 
 function gen_RSA_2048(session: graphene.Session, name: string, token = false) {
-    return gen_RSA(session,name, 2048, Buffer.from([1, 0, 1]), token);
+    return gen_RSA(session, name, 2048, Buffer.from([1, 0, 1]), token);
 }
 
 function gen_RSA_4096(session: graphene.Session, name: string, token = false) {
-    return gen_RSA(session,name, 4096, Buffer.from([1, 0, 1]), token);
+    return gen_RSA(session, name, 4096, Buffer.from([1, 0, 1]), token);
 }
 
 function gen_ECDSA_secp160r1(session: graphene.Session, name: string, token = false) {
@@ -150,9 +149,9 @@ function gen_ECDSA_brainpoolP320r1(session: graphene.Session, name: string, toke
 function gen_AES_128(session: graphene.Session, name: string, token = false) {
     return gen_AES(session, name, 128, token);
 }
-function gen_AES_192(session: graphene.Session, name:string, token = false) {
+function gen_AES_192(session: graphene.Session, name: string, token = false) {
     return gen_AES(session, name, 192, token);
 }
-function gen_AES_256(session: graphene.Session, name:string, token = false){
+function gen_AES_256(session: graphene.Session, name: string, token = false) {
     return gen_AES(session, name, 256, token);
 }

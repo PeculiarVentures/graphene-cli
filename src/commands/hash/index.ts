@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import * as graphene from "graphene-pk11";
 
+import { encode } from "punycode";
 import { Command } from "../../command";
 import { AlgorithmOption } from "../../options/alg";
 import { SlotOption } from "../../options/slot";
 import { InputOption } from "./options/input";
-import { encode } from "punycode";
 
 interface HashOptions {
     slot: graphene.Slot;
@@ -33,7 +33,7 @@ export class HashCommand extends Command {
         const session = params.slot.open(graphene.SessionFlag.SERIAL_SESSION);
         let hash: string | null = null;
         try {
-            let digest = session.createDigest(params.alg);
+            const digest = session.createDigest(params.alg);
             hash = digest.once(data).toString("hex");
         } catch (err) {
             session.close();

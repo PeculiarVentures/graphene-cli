@@ -4,10 +4,10 @@ import { Application } from "./application";
 import {NonInteractive} from "./non_interactive";
 
 async function main(args: string[]) {
-    if(args.length>2){
+    if (args.length > 2) {
         const app = new NonInteractive();
         await app.run(args);
-    }else{
+    } else {
         const app = new Application();
         await app.run(args);
     }

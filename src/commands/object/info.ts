@@ -1,10 +1,10 @@
 import * as graphene from "graphene-pk11";
 
 import { Command } from "../../command";
-import { get_session } from "../slot/helper";
-import { ObjectIdOption } from "./options/obj_id";
 import { Handle } from "../../helper";
+import { get_session } from "../slot/helper";
 import { print_object_info } from "./helper";
+import { ObjectIdOption } from "./options/obj_id";
 
 interface InfoOptions {
     oid: string;
@@ -36,7 +36,5 @@ export class InfoCommand extends Command {
 
         return this;
     }
-
-
 
 }

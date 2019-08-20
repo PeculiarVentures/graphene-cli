@@ -1,10 +1,10 @@
 import { Command } from "../../command";
-import { ListCommand } from "./list";
-import { TestCommand } from "./test";
 import { DeleteCommand } from "./delete";
-import { InfoCommand } from "./info";
 import {GenerateCommand} from "./generate";
+import { InfoCommand } from "./info";
+import { ListCommand } from "./list";
 import {SignCommand} from "./sign";
+import { TestCommand } from "./test";
 
 export class ObjectCommand extends Command {
     public name = "object";

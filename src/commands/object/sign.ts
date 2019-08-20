@@ -2,22 +2,21 @@ import * as graphene from "graphene-pk11";
 
 import { Command } from "../../command";
 
-import {SlotOption} from "../../options/slot";
-import {DataOption} from "./options/data";
 import {Option} from "../../options";
-import {HandleOption} from "./options/handle";
+import {SlotOption} from "../../options/slot";
 import {get_session} from "../slot/helper";
 import {AlgorithmOption} from "./options/alg";
+import {DataOption} from "./options/data";
+import {HandleOption} from "./options/handle";
 
-
-interface signOptions extends Option{
+interface SignOptions extends Option {
     slot: number;
-    handle:string;
-    data:string;
-    alg:string;
+    handle: string;
+    data: string;
+    alg: string;
 }
 
-export class SignCommand extends Command{
+export class SignCommand extends Command {
     public name = "sign";
     public description = [
         "Signs with a key",
@@ -36,23 +35,23 @@ export class SignCommand extends Command{
         this.options.push(new AlgorithmOption());
 
     }
-    protected async onRun(params:signOptions):Promise<Command>{
+    protected async onRun(params: SignOptions): Promise<Command> {
         const session = get_session();
 
         let alg: graphene.MechanismType;
 
-        if(graphene.MechanismEnum[params.alg.toUpperCase() as any] !== undefined){
+        if (graphene.MechanismEnum[params.alg.toUpperCase() as any] !== undefined) {
             alg = graphene.MechanismEnum[params.alg.toUpperCase() as any];
-        }else{
-            throw new Error("No mechanism found")
+        } else {
+            throw new Error("No mechanism found");
         }
-        if (!session.getObject(Buffer.from(params.handle,'hex'))) {
+        if (!session.getObject(Buffer.from(params.handle, "hex"))) {
             throw new Error("Cannot find signing key");
         }
-        const privObj = session.getObject(Buffer.from(params.handle,'hex')).toType<graphene.Key>();
+        const privObj = session.getObject(Buffer.from(params.handle, "hex")).toType<graphene.Key>();
 
-        var signature = session.createSign(alg,privObj).once(Buffer.from(params.data,'hex'));
-        console.log(signature.toString('hex'));
+        const signature = session.createSign(alg, privObj).once(Buffer.from(params.data, "hex"));
+        console.log(signature.toString("hex"));
 
         return this;
     }

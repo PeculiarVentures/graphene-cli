@@ -3,8 +3,8 @@ import * as graphene from "graphene-pk11";
 import { Command } from "../../command";
 import { AlgorithmOption } from "../../options/alg";
 import { SlotOption } from "../../options/slot";
-import { print_slot_info, print_alg_info } from "./helper";
 import { get_module } from "../module/helper";
+import { print_alg_info, print_slot_info } from "./helper";
 
 interface InfoOptions {
     slot: graphene.Slot;
