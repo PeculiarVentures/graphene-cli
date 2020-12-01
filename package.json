@@ -26,6 +26,11 @@
   },
   "author": "",
   "license": "MIT",
+  "files": [
+    "build/**/*.{ts,js}",
+    "README.md",
+    "LICENSE"
+  ],
   "bugs": {
     "url": "https://github.com/PeculiarVentures/graphene-cli/issues"
   },
