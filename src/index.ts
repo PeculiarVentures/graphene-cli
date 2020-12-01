@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { Application } from "./application";
-import {NonInteractive} from "./non_interactive";
+import { data } from "./data";
+import { NonInteractive } from "./non_interactive";
 
 async function main(args: string[]) {
     if (args.length > 2) {
@@ -13,6 +14,13 @@ async function main(args: string[]) {
     }
 
 }
+
+process.on("beforeExit", () => {
+    if (data.module) {
+        data.module.close();
+        delete data.module;
+    }
+});
 
 main(process.argv)
     .catch((err) => {
