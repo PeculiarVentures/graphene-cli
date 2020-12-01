@@ -23,8 +23,6 @@ if (process.send) {
         try {
             const mod = graphene.Module.load(args.lib);
 
-            fs.writeFileSync("/tmp/g.log", "sign start\n", { flag: "a+" });
-
             mod.initialize();
 
             try {
@@ -72,7 +70,6 @@ if (process.send) {
             }
 
             mod.finalize();
-            fs.writeFileSync("/tmp/g.log", "sign end\n", { flag: "a+" });
             process.send!({
                 type: "success",
                 time,
