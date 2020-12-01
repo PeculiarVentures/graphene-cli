@@ -27,7 +27,7 @@ Module info
 
 Session is started
 
-> test sign -it 200 -a all
+> test sign -it 200 -a all -s 0
 
 | Algorithm                 |     Sign |   Verify |   Sign/s | Verify/s |
 |---------------------------|---------:|---------:|---------:|---------:|
