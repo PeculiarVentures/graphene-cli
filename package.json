@@ -7,7 +7,7 @@
   },
   "main": "build/index.js",
   "dependencies": {
-    "graphene-pk11": "^2.2.0",
+    "graphene-pk11": "^2.2.1",
     "tslib": "^2.0.3"
   },
   "devDependencies": {
@@ -18,7 +18,7 @@
     "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "pub": "npm version patch && npm publish && git push"
+    "pub": "npm version patch && git push --follow-tags"
   },
   "repository": {
     "type": "git",
