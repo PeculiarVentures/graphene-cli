@@ -36,9 +36,11 @@ function gen_RSA(session: graphene.Session, name: string, size: number, exp: Buf
             verify: true,
         },
         {
+            keyType: graphene.KeyType.RSA,
             id: TEST_KEY_ID,
             label: name + "-privKey",
             token,
+            sensitive: token,
             private: true,
             sign: true,
             decrypt: true,
@@ -59,9 +61,11 @@ function gen_ECDSA(session: graphene.Session, name: string, hexOid: string, toke
             paramsEC: Buffer.from(hexOid, "hex"),
         },
         {
+            keyType: graphene.KeyType.ECDSA,
             id: TEST_KEY_ID,
             label: name + "-privKey",
             token,
+            sensitive: token,
             private: true,
             sign: true,
         },

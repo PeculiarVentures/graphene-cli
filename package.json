@@ -7,18 +7,18 @@
   },
   "main": "build/index.js",
   "dependencies": {
-    "graphene-pk11": "^2.1.2",
-    "tslib": "^1.10.0"
+    "graphene-pk11": "^2.2.1",
+    "tslib": "^2.0.3"
   },
   "devDependencies": {
-    "@types/node": "^9.6.49",
-    "typescript": "^2.9.2"
+    "@types/node": "^14.14.10",
+    "typescript": "^4.1.2"
   },
   "scripts": {
     "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "pub": "npm version patch && npm publish && git push"
+    "pub": "npm version patch && git push --follow-tags"
   },
   "repository": {
     "type": "git",
