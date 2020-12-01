@@ -45,10 +45,11 @@ export class SignCommand extends Command {
         } else {
             throw new Error("No mechanism found");
         }
-        if (!session.getObject(Buffer.from(params.handle, "hex"))) {
+        const obj = session.getObject(Buffer.from(params.handle, "hex"))
+        if (!obj) {
             throw new Error("Cannot find signing key");
         }
-        const privObj = session.getObject(Buffer.from(params.handle, "hex")).toType<graphene.Key>();
+        const privObj = obj.toType<graphene.Key>();
 
         const signature = session.createSign(alg, privObj).once(Buffer.from(params.data, "hex"));
         console.log(signature.toString("hex"));

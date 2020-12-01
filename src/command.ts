@@ -102,7 +102,7 @@ export abstract class Command {
         return res2;
     }
 
-    protected abstract async onRun(options: Assoc<any>): Promise<Command>;
+    protected abstract onRun(options: Assoc<any>): Promise<Command>;
 
 }
 
