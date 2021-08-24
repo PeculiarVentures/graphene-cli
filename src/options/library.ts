@@ -9,6 +9,5 @@ export class LibraryOption extends Option {
         super();
 
         this.alias = "l";
-        this.isRequired = true;
     }
 }

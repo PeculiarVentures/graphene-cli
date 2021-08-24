@@ -9,6 +9,5 @@ export class NameOption extends Option {
         super();
 
         this.alias = "n";
-        this.isRequired = true;
     }
 }

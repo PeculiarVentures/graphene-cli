@@ -1,3 +1,5 @@
+/// <reference path="types.d.ts" />
+
 import { Option } from "./options";
 
 export abstract class Command {

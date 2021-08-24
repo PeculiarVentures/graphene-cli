@@ -50,20 +50,21 @@ Session is started
 
 JSON file structure
 ```
-lib       path to PKCS#11 library
-libName   custom name of library
-slot      Index of slot
-pin       PIN for  
+lib         Required. Path to PKCS#11 library.
+libName     Optional. custom name of library.
+slot        Default 0. Index of slot.
+pin         Optional. PIN for the token
+readWrite   Default false. Open session in edit mode
 ```
 
 Example of config file for SoftHSMv2
 ```
 // config.json
 {
-    "lib": "/usr/local/lib/softhsm/libsofthsm2.so",
-    "libName": "SoftHSMv2.0",
-    "slot": 0,
-    "pin": "password"
+  "lib": "/usr/local/lib/softhsm/libsofthsm2.so",
+  "libName": "SoftHSMv2.0",
+  "slot": 0,
+  "pin": "password"
 }
 ```
 
@@ -76,5 +77,5 @@ graphene
 Load module from config file
 
 ```
-> module init -p config.json
+> module load -p config.json
 ```
